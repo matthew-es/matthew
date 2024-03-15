@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Python + Flask + SSE + GPT-4 streaming</title>
+
+    <style>        
+        html {
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial;
+            color: #000000;
+        }
+
+        h1 {
+            font-family: 'Impact';
+            font-size: 50px;
+            letter-spacing: 2px;
+        }
+
+        #header {
+            padding-left: 20px;
+        }
+
+        #conversation {
+            height: calc(100vh - 200px);
+            box-sizing: border-box;
+            overflow-y: auto;
+            max-width: 100%;
+
+            margin-top: 20px;
+            padding-top: 10px;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 20px;
+        }
+
+        #chatForm { 
+            position: fixed;
+            height: 40px;
+            bottom: 0;
+            width: 100%;
+            left: 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+
+        /* Style for user questions */
+        .user-question {
+            background-color: #f0f0f0f5; /* Light grey background */
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            text-align: left; /* Align user questions to the right */
+        }
+
+        /* Style for GPT replies */
+        .gpt-response {
+            background-color: #ffffff; /* Light green background */
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        /* Style for the input box */
+        #questionInput {
+        width:88%; /* Adjust the width as desired */
+        padding: 10px; 
+        margin-bottom: 10px;
+        border: 2px solid #ccc; /* Light grey border */
+        border-radius: 5px;   /* Slightly rounded corners */
+        font-size: 16px;   /* Adjust font size if needed */
+        }
+
+        /* Style for the button */
+        #chatForm button {
+        background-color: #4CAF50; /* Example: Green background */
+        color: white;
+        padding: 12px 20px;
+        margin-left: 10px;
+        border: none;
+        border-radius: 5px; 
+        cursor: pointer;
+        font-size: 16px;   
+        }
+
+        /* Optional: Hover effect for the button */
+        #chatForm button:hover {
+        background-color: #45a049; /* Darker green on hover */
+        }
+
+        #chatForm button:disabled {
+            background-color: #cccccc;
+            color: #888888;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+        display: inline-block;
+        width: 16px; /* Adjust size as needed */
+        height: 16px; 
+        margin-right: 5px; 
+        border: 2px solid #f3f3f3; /* Light grey */
+        border-top-color: #3498db; /* Example color, change as desired */
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+        }
+    </style>
+
+</head>
+<body>
+    <div id="passwordOverlay" style="display: none; position: fixed; width: 100%; height: 100%; top: 0; left: 0; right: 0; bottom: 0; background-color: #000000; z-index: 2; cursor: pointer;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 50px; border-radius: 5px;">
+            <h3>DCX Chat GPT</h3>
+            <form id="passwordForm">
+                <label for="password">Password:</label>
+                <input type="password" id="passwordInput" name="password">
+                <button type="submit" id="submitPassword">Submit</button>
+            </form>
+        </div>
+    </div>
+    
+    
+    <div id="header">
+        <h1>Python + Flask + SSE + GPT-4 streaming</h1>
+    </div>
+    
+    <div id="conversation">
+    </div>
+
+    <form id="chatForm" onsubmit="askQuestion(); return false;">
+        <input type="text" id="questionInput" placeholder="Ask a question...">
+        <button type="submit" id="askButton">Ask</button>
+    </form>
+
+    <script>
+        var firstChunkReceived = false; // Move the flag to a broader scope
+        let currentReplyP = null;
+
+        function askQuestion() {
+            document.getElementById('askButton').disabled = true;
+            const question = document.getElementById("questionInput").value;
+            questionInput.value = "";
+            firstChunkReceived = false; // Reset the flag for each new question
+
+            // Create a space for the conversation
+            const conversationDiv = document.getElementById("conversation");
+
+            // Add user's question
+            const questionP = document.createElement("p");
+            questionP.textContent = question;
+            questionP.classList.add("user-question"); // Add a class to style it differently
+            conversationDiv.appendChild(questionP); 
+
+            // Display "Thinking..." while waiting for first chunk, then stream reply 
+            currentReplyP = document.createElement("p");
+            currentReplyP.innerHTML = "Thinking...<span class=\"spinner\"></span>";
+            currentReplyP.classList.add("gpt-response");
+            conversationDiv.appendChild(currentReplyP);
+            scrollToBottom();
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/ask", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    console.log("Question asked.");
+                }
+            }
+            xhr.send("question=" + encodeURIComponent(question));
+        }
+
+        function scrollToBottom() {
+            const conversationDiv = document.getElementById("conversation");
+            console.log("clientHeight is: " + conversationDiv.clientHeight, "scrollHeight is: " + conversationDiv.scrollHeight);
+            const inputArea = document.getElementById("chatForm");
+            const totalHeight = conversationDiv.scrollHeight + inputArea.offsetHeight;
+            const visibleHeight = conversationDiv.offsetHeight;
+            const isOverflowing = totalHeight > visibleHeight;
+            setTimeout(() => {
+                conversationDiv.scrollTop = conversationDiv.scrollHeight;
+            }, 0);
+        }
+
+        // Establish or re-establish an EventSource connection
+        function setupEventSource() {
+            if (window.eventSource) {
+                window.eventSource.close(); // Close the existing connection if it exists
+            }
+            window.eventSource = new EventSource("/stream");
+
+            window.eventSource.onmessage = function(e) {
+                document.getElementById('askButton').disabled = true;
+
+                if (e.data === 'ENDEND') {
+                    document.getElementById('askButton').disabled = false;
+                    currentReplyP.innerHTML = currentReplyP.textContent;
+                } else {
+                    document.getElementById('askButton').disabled = true;
+                    if (!firstChunkReceived) {
+                        if (currentReplyP) { 
+                            currentReplyP.textContent = e.data; // Replace "Thinking..."
+                        }
+                        firstChunkReceived = true;
+                    } else {
+                        if (currentReplyP) {
+                            currentReplyP.textContent += e.data;
+                            scrollToBottom();
+                        }
+                    }
+                }
+                    // // Calculate if overflow has occurred, considering input area height
+                    // const conversationDiv = document.getElementById("conversation");
+                    // const inputArea = document.getElementById("chatForm");
+                    // const totalHeight = conversationDiv.scrollHeight + inputArea.offsetHeight;
+                    // const visibleHeight = conversationDiv.offsetHeight;
+                    // const isOverflowing = totalHeight > visibleHeight;
+
+                    // if (isOverflowing) {
+                    //     conversationDiv.scrollTop = conversationDiv.scrollHeight;
+                    // }
+            };
+        }
+
+        window.addEventListener("load", setupEventSource);
+    
+        window.addEventListener("load", function() {
+            var overlay = document.getElementById('passwordOverlay');
+            var passwordInput = document.getElementById('passwordInput');
+            var submitButton = document.getElementById('submitPassword');
+
+            overlay.style.display = 'block';
+
+            passwordForm.onsubmit = function(event) {
+                event.preventDefault();  // Prevent the form from being submitted
+                if (passwordInput.value != "dcx1234") {
+                    alert("Incorrect password");
+                } else {
+                    overlay.style.display = 'none';
+                }
+            }
+            
+            
+            // Optionally, only reset under certain conditions, e.g., a specific query parameter is present
+            fetch('/reset').then(response => {
+                console.log("Session reset.");
+                // Proceed with any other initialization, like setting up the event source
+                setupEventSource();
+            });
+        });
+
+    </script>
+</body>
+</html>
