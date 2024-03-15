@@ -1,4 +1,5 @@
 from flask import Flask, Response, stream_with_context, render_template, request, session, redirect, url_for
+from flask_session import Session
 import os
 import dotenv
 import time
@@ -12,6 +13,9 @@ dotenv.load_dotenv()
 ai.api_key = os.getenv("OPENAI_API_KEY")
 app.secret_key = 'your_secret_key_123'
 
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -22,8 +26,7 @@ def chat():
 
 @app.route('/read')
 def read():
-    value = session.get('conversation', 'Session value not found')
-    return render_template('read.html', value=value)
+    return str(session['conversation'])
 
 @app.route('/reset')
 def reset():
@@ -75,7 +78,7 @@ def ask():
         messages=session['conversation'],
         stream=True,
         temperature=1.3,
-        max_tokens=300,
+        max_tokens=200,
     )
     
     answer = ""
