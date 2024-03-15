@@ -18,7 +18,7 @@ def index():
 
 @app.route('/dcx/chat')
 def chat():
-    return render_template('chat.html')
+    return render_template('chat.html', environ=os.environ)
 
 @app.route('/read')
 def read():

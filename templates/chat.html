@@ -243,7 +243,7 @@
 
             passwordForm.onsubmit = function(event) {
                 event.preventDefault();  // Prevent the form from being submitted
-                if (passwordInput.value != "dcx1234") {
+                if (passwordInput.value != "{{ environ['DCX_CHAT'] }}") {
                     alert("Incorrect password");
                 } else {
                     overlay.style.display = 'none';
