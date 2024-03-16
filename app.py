@@ -1,4 +1,4 @@
-from flask import Flask, Response, stream_with_context, render_template, request, session, redirect, url_for
+from flask import Flask, Response, stream_with_context, render_template, request, session, redirect, url_for, jsonify
 from flask_session import Session
 import os
 import dotenv
@@ -26,17 +26,23 @@ def chat():
 
 @app.route('/read')
 def read():
-    return str(session['conversation'])
+    conv = session.get('conversation', None)
+    chat = session.get('chat_history', None)
+    return jsonify(conversation=conv, chat_history=chat)
 
 @app.route('/reset')
 def reset():
     # Remove the value from the session
-    session.pop('conversation', None)
-    return 'Session value reset.'
+    session.clear()
+    return 'All reset.'
+
+@app.route('/reset_streaming_answer')
+def reset_streaming_answer():
+    # Remove the value from the session
+    session.pop('chat_history', None)
+    return 'All reset.'
 
 #######################################################################################
-
-chat_history = []
 
 @app.route('/ask', methods=['POST'])
 def ask():
@@ -62,6 +68,7 @@ def ask():
                 Your response should empower the user to take informed actions, providing all necessary details for the next steps in their export journey. Privacy and data respect are paramount, and the advice should shortly remind the user of the importance of personal legal and financial consultation where necessary.
             """
         }]
+        session.modified = True
     
     conversation_string = ' '.join(message['content'] for message in session['conversation'])
     tokens_in_conversation = (len(encoding.encode(conversation_string)))
@@ -82,34 +89,40 @@ def ask():
     )
     
     answer = ""
+    session['chat_history'] = []
 
     for chunk in response:
         new_chunk = chunk.choices[0].delta.content
         if new_chunk:
-            chat_history.append(new_chunk)
+            session['chat_history'].append(new_chunk)
+            session.modified = True
             print(new_chunk)
             answer += new_chunk
         elif new_chunk is None and len(answer) > 1:
-            chat_history.append(f"<br /><strong>TOKENS:</strong> {tokens_in_conversation}")
-            chat_history.append("ENDEND")
+            session['chat_history'].append(f"<br /><strong>TOKENS:</strong> {tokens_in_conversation}")
+            session['chat_history'].append("ENDEND")
+            session.modified = True
     
     if answer is not None:
         # conversation.append({"role": "assistant", "content": answer})
         session['conversation'].append({"role": "assistant", "content": answer})
-        session.modified = True  # Inform Flask that the session has been modified
+        session.modified = True
 
     # print("CONVERSATION 3: ", conversation)
     print("SESSION END: ", session['conversation'])    
     return ('', 204)  # Return an empty response for the POST request
 
-
 @app.route('/stream')
 def stream():
     def generate():
-        while chat_history:
-            yield f"data: {chat_history.pop(0)}\n\n"
-            time.sleep(0.01)  # Slow down the stream for demonstration
-            
+        if session.get('chat_history') is None:
+            return
+        else:
+            while session['chat_history']:
+                yield f"data: {session['chat_history'].pop(0)}\n\n"
+                session.modified = True
+                time.sleep(0.005)  # Slow down the stream for demonstration
+
     return Response(stream_with_context(generate()), content_type='text/event-stream')
 
 if __name__ == '__main__':

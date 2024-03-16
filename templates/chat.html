@@ -205,6 +205,19 @@
                 if (e.data === 'ENDEND') {
                     document.getElementById('askButton').disabled = false;
                     currentReplyP.innerHTML = currentReplyP.textContent;
+
+                    // Make a request to the /reset endpoint
+                    fetch('/reset_streaming_answer')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        // Handle response here if needed
+                    })
+                    .catch(error => {
+                        console.error('There has been a problem with your fetch operation:', error);
+                    });
+
                 } else {
                     document.getElementById('askButton').disabled = true;
                     if (!firstChunkReceived) {
