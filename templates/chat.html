@@ -317,6 +317,7 @@
                 event.preventDefault();  // Prevent the form from being submitted
                 if (passwordInput.value != "{{ environ['DCX_CHAT'] }}") {
                     alert("Incorrect password");
+                    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1');
                 } else {
                     overlay.style.display = 'none';
                 }
