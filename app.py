@@ -146,7 +146,7 @@ def stream():
 
 ############################################################################################################
 
-@app.route('/rss')
+@app.route('/dcx/rss')
 def rss():
     # List of RSS feed URLs you want to read
     feeds = [
