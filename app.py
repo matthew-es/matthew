@@ -3,6 +3,9 @@ from flask_session import Session
 import os
 import dotenv
 import time
+import requests
+import xml.etree.ElementTree as ET
+
 import matthew_logger as log
 
 import openai as ai
@@ -140,6 +143,43 @@ def stream():
                 time.sleep(0.005)  # Slow down the stream for demonstration
 
     return Response(stream_with_context(generate()), content_type='text/event-stream')
+
+############################################################################################################
+
+@app.route('/rss')
+def rss():
+    # List of RSS feed URLs you want to read
+    feeds = [
+        {'name': 'WSJ Markets', 'url': 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'},
+        {'name': 'S&P Commodities', 'url': 'https://www.spglobal.com/commodityinsights/en/rss-feed/agriculture'},
+        {'name': 'FT Commodities', 'url': 'https://www.ft.com/commodities?format=rss'},
+        {'name': 'BBC Business', 'url': 'http://feeds.bbci.co.uk/news/business/rss.xml'},
+        {'name': 'Hindu Agri', 'url': 'https://www.thehindu.com/business/agri-business/feeder/default.rss'},
+        {'name': 'WE News', 'url': 'https://en.wenews.pk/feed/'},
+        {'name': 'FAO Asia', 'url': 'https://www.fao.org/asiapacific/news/rss/en/'},
+        {'name': 'UN Asia', 'url': 'https://news.un.org/feed/subscribe/en/news/region/asia-pacific/feed/rss.xml'}
+    ]
+    
+    items = []
+    for feed in feeds:
+        try:
+            # Fetching the feed
+            response = requests.get(feed['url'])
+            # Parsing the feed
+            root = ET.fromstring(response.content)
+            
+            # Extracting items (articles) from the feed
+            for item in root.findall('.//item'):
+                title = item.find('title').text
+                link = item.find('link').text
+                items.append({'title': title, 'link': link, 'source': feed['name']})
+        except Exception as e:
+            print(f"Failed to process feed {feed['url']}: {e}")
+
+    # Rendering the items to a simple HTML template
+    return render_template('rss.html', items=items)
+
+############################################################################################################
 
 if __name__ == '__main__':
     app.run(debug=True)

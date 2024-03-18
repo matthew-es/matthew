@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DCX Commodities RSS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DCX Commodities RSS</h1>
+        </div>
+        <div class="main">
+            <ul>
+                {% for item in items %}
+                <li>
+                    <strong>{{ item.source }}:</strong> <a href="{{ item.link }}">{{ item.title|truncate(100, true, '...') }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="clear"></div>
+    </div>
+    <footer>
+        <p>© 2024 Matthew Bennett</p>
+    </footer>
+</body>
+</html>
