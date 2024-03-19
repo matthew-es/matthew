@@ -7,7 +7,7 @@
     <ul>
         {% for title, link, source, created_at in items %}
         <li>
-            <strong>{{ created_at }}: {{ source }}:</strong> <a href="{{ link }}">{{ title|truncate(100, true, '...') }}</a>
+            <strong>{{ created_at }}: {{ source }}:</strong> <a href="{{ link }}">{{ title|truncate(90, true, '...') }}</a>
         </li>
         {% endfor %}
     </ul>

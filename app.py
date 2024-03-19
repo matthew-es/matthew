@@ -310,7 +310,7 @@ def rss():
     items = cursor.fetchall()
     
     for i, item in enumerate(items):
-        items[i] = item[:3] + (item[3].strftime('%Y-%m-%d %H:%M:%S'),)
+        items[i] = item[:3] + (item[3].strftime('%b %d %H:%M'),)
     
     cursor.close()
     db.db_connect_close(new_connection)
