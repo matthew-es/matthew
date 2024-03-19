@@ -53,26 +53,58 @@ def check_or_create_tables(new_connection):
     
     
     cursor = new_connection.cursor()
-    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'symbols');")
+    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'matthew_users');")
     exists = cursor.fetchone()[0]
     if not exists:
-        cursor.execute(symbols_create_table())
+        cursor.execute(matthew_users_create_table())
         new_connection.commit()
         log.log_message("CREATED TABLE: symbols")
     else:
         log.log_message("TABLE: symbols already exists")
     new_connection.commit()
-
     
     cursor = new_connection.cursor()
-    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users');")
+    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'matthew_chats');")
     exists = cursor.fetchone()[0]
     if not exists:
-        cursor.execute(users_create_table())
+        cursor.execute(matthew_chats_create_table())
         new_connection.commit()
-        log.log_message("CREATED TABLE: users")
+        log.log_message("CREATED TABLE: symbols")
     else:
-        log.log_message("TABLE: users already exists")
+        log.log_message("TABLE: symbols already exists")
+    new_connection.commit()
+        
+    cursor = new_connection.cursor()
+    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'matthew_chatmessages');")
+    exists = cursor.fetchone()[0]
+    if not exists:
+        cursor.execute(matthew_chatmessages_create_table())
+        new_connection.commit()
+        log.log_message("CREATED TABLE: symbols")
+    else:
+        log.log_message("TABLE: symbols already exists")
+    new_connection.commit()
+     
+    cursor = new_connection.cursor()
+    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'matthew_rssfeeds');")
+    exists = cursor.fetchone()[0]
+    if not exists:
+        cursor.execute(matthew_rssfeeds_create_table())
+        new_connection.commit()
+        log.log_message("CREATED TABLE: symbols")
+    else:
+        log.log_message("TABLE: symbols already exists")
+    new_connection.commit()
+    
+    cursor = new_connection.cursor()
+    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'matthew_rssitems');")
+    exists = cursor.fetchone()[0]
+    if not exists:
+        cursor.execute(matthew_rssitems_create_table())
+        new_connection.commit()
+        log.log_message("CREATED TABLE: symbols")
+    else:
+        log.log_message("TABLE: symbols already exists")
     new_connection.commit()
     
     log.log_duration_end(log_check_or_create_tables)
@@ -117,29 +149,57 @@ def matthew_users_create_table():
             EXECUTE FUNCTION update_updatedat_column();
     """
 
+
+
 def matthew_chats_create_table():
     return """
         CREATE TABLE matthew_chats (
         chatid SERIAL PRIMARY KEY,
         userid UUID NOT NULL,
+        chatmodel VARCHAR(255) NOT NULL,
+        chatprompt TEXT,
         createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userid) REFERENCES matthew_users(uuid)
     );
     """
 
-def matthew_messages_create_table():
+def matthew_chatmessages_create_table():
     return """
-        CREATE TABLE matthew_messages (
-        messageid SERIAL PRIMARY KEY,
+        CREATE TABLE matthew_chatmessages (
+        chatmessageid SERIAL PRIMARY KEY,
         chatid INTEGER NOT NULL,
         userid UUID NOT NULL,
-        messagecontent TEXT,
-        status VARCHAR(255),
+        chatmessagecontent TEXT,
+        chatmessagetype VARCHAR(255) NOT NULL,
         createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (chatid) REFERENCES matthew_chats(chatid),
         FOREIGN KEY (userid) REFERENCES matthew_users(uuid)
+    );
+    """
+
+def matthew_rssfeeds_create_table():
+    return """
+        CREATE TABLE matthew_rssfeeds (
+        rssfeedid SERIAL PRIMARY KEY,
+        rssfeedtitle TEXT,
+        rssfeedurl TEXT,
+        createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+
+def matthew_rssitems_create_table():
+    return """
+        CREATE TABLE matthew_rssitems (
+        rssitemid SERIAL PRIMARY KEY,
+        rssfeedid INTEGER NOT NULL,
+        rssitemurl TEXT,
+        rssitemtitle TEXT,
+        createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (rssfeedid) REFERENCES matthew_rssfeeds(rssfeedid)
     );
     """
 

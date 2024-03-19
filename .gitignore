@@ -1,7 +1,5 @@
 .venv/
 venv/
 .env
-draft-ideas/
-notebooks/
-notes/
 log.txt
+notes.txt

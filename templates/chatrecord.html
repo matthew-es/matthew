@@ -1,0 +1,27 @@
+{% extends 'base_dcx.html' %}    
+
+{% block pagetitle %}Chat Record{% endblock %}
+{% block h1title %}Chat Record{% endblock %}
+
+{% block content %}
+<div>
+    <p><strong>Chat Model:</strong> {{ chat_model }}</p>
+    <p><strong>Prompt:</strong> {{ chat_prompt }}</p>
+</div>
+
+<div id="conversation">
+    <div id="chat-messages">
+        {% for message, status in messages %}
+            <div class="message {{ status }}">
+                {% if status == 'question' %}
+                    <p class="user-question">
+                {% else %}
+                <p class="gpt-response">
+                {% endif %}
+                {{ message }}
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

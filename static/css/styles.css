@@ -1,0 +1,203 @@
+html {
+    height: auto;
+}
+
+body {
+    height: auto;
+    font-family: Arial;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+#container {
+max-width: 1000px;
+height: auto;
+overflow: hidden;
+margin: 0 auto;
+text-align: left;
+border: 1px solid #ccc;
+padding: 30px;
+}
+
+.float-container {margin-bottom: 10px;}
+.float-left {float: left;}
+.float-right {float: right;}
+.float-clear {clear: both;}
+
+
+#header {
+    width: 100%;
+}
+
+h1 {
+    font-family: 'Impact';
+    font-size: 30px;
+    letter-spacing: 2px;
+}
+
+#nav{width: 100%; margin-bottom: 10px;}
+#main{width: 100%;}
+
+#conversation {
+    height: calc(100vh - 200px);
+    box-sizing: border-box;
+    overflow-y: auto;
+    max-width: 100%;
+
+    margin-top: 20px;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+}
+
+#chatForm { 
+    position: fixed;
+    height: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #f0f0f0;
+}
+
+/* Style for user questions */
+.user-question {
+    background-color: #f0f0f0f5; /* Light grey background */
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    text-align: left; /* Align user questions to the right */
+}
+
+/* Style for GPT replies */
+.gpt-response {
+    background-color: #ffffff; /* Light green background */
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    text-align: left;
+}
+
+/* Style for the input box */
+#questionInput {
+width:88%; /* Adjust the width as desired */
+padding: 10px; 
+margin-bottom: 10px;
+border: 2px solid #ccc; /* Light grey border */
+border-radius: 5px;   /* Slightly rounded corners */
+font-size: 16px;   /* Adjust font size if needed */
+}
+
+/* Style for the button */
+#chatForm button {
+background-color: #732634; /* Example: Green background */
+color: white;
+padding: 12px 20px;
+margin-left: 10px;
+border: none;
+border-radius: 5px; 
+cursor: pointer;
+font-size: 16px;   
+}
+
+/* Optional: Hover effect for the button */
+#chatForm button:hover {
+background-color: #F23545; /* Darker green on hover */
+}
+
+#chatForm button:disabled {
+    background-color: #cccccc;
+    color: #888888;
+    cursor: not-allowed;
+}
+
+.spinner {
+display: inline-block;
+width: 16px; /* Adjust size as needed */
+height: 16px; 
+margin-right: 5px; 
+border: 2px solid #f3f3f3; /* Light grey */
+border-top-color: #3498db; /* Example color, change as desired */
+border-radius: 50%;
+animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+html {
+    height: 100vh;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    font-family: Arial;
+    color: #000000;
+}
+
+
+h1 {
+    font-size: 4rem;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+#conversation {
+    height: calc(80vh -90px);
+    box-sizing: border-box;
+    overflow-y: auto;
+    max-width: 100%;
+
+    margin-top: 0px;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 90px;
+}
+
+.user-question, .gpt-response, #questionInput, #chatForm button {
+    font-size: 1.1rem; /* Larger font size for readability */
+}
+
+#chatForm {
+    flex-direction: column;
+    align-items: stretch;
+    position: fixed;
+    min-height: 90px;
+    padding: 10px;
+}
+
+#questionInput {
+    width: 90%; /* Adjust for smaller screens */
+    margin: 0 auto;
+    margin-bottom: 5px;
+}
+
+#chatForm button {
+    width: 90%;
+    margin: 0 auto;
+}
+}
+
+p {margin:0; margin-bottom: 10px}
+ul {margin-top: 20px;}
+ul li {margin-left: 0; margin-top: 5px;}
+img {max-width: 100%; margin-top: 20px;}
+
+footer {
+position: fixed;
+bottom: 0;
+width: 100%;
+text-align: center;
+padding: 10px 0;
+background-color: #000;
+color: #fff;
+}
