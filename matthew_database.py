@@ -197,6 +197,7 @@ def matthew_rssitems_create_table():
         rssfeedid INTEGER NOT NULL,
         rssitemurl TEXT,
         rssitemtitle TEXT,
+        rssitemdate TIMESTAMP WITHOUT TIME ZONE,
         createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (rssfeedid) REFERENCES matthew_rssfeeds(rssfeedid)

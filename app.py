@@ -3,6 +3,7 @@ from flask_session import Session
 import os
 import dotenv
 import time
+import datetime as dt
 import requests
 import xml.etree.ElementTree as ET
 
@@ -255,38 +256,65 @@ def stream():
 
 ############################################################################################################
 
-@app.route('/dcx/rss')
-def rss():
-    chat_ids = get_distinct_chat_ids()
-    # List of RSS feed URLs you want to read
-    feeds = [
-        {'name': 'WSJ Markets', 'url': 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml'},
-        {'name': 'S&P Commodities', 'url': 'https://www.spglobal.com/commodityinsights/en/rss-feed/agriculture'},
-        {'name': 'FT Commodities', 'url': 'https://www.ft.com/commodities?format=rss'},
-        {'name': 'BBC Business', 'url': 'http://feeds.bbci.co.uk/news/business/rss.xml'},
-        {'name': 'Hindu Agri', 'url': 'https://www.thehindu.com/business/agri-business/feeder/default.rss'},
-        {'name': 'WE News', 'url': 'https://en.wenews.pk/feed/'},
-        {'name': 'FAO Asia', 'url': 'https://www.fao.org/asiapacific/news/rss/en/'},
-        {'name': 'UN Asia', 'url': 'https://news.un.org/feed/subscribe/en/news/region/asia-pacific/feed/rss.xml'}
-    ]
+@app.route('/dcx/rss/refresh')
+def refresh_rss():
+    new_connection = db.db_connect_open()
+    cursor = new_connection.cursor()
     
-    items = []
+    # Retrieve all RSS feed URLs from the database
+    cursor.execute("SELECT rssfeedid, rssfeedurl, rssfeedtitle FROM matthew_rssfeeds")
+    feeds = cursor.fetchall()
+    
     for feed in feeds:
+        rssfeedid, rssfeedurl, rssfeedtitle = feed
         try:
-            # Fetching the feed
-            response = requests.get(feed['url'])
-            # Parsing the feed
+            response = requests.get(rssfeedurl)
             root = ET.fromstring(response.content)
             
-            # Extracting items (articles) from the feed
             for item in root.findall('.//item'):
                 title = item.find('title').text
                 link = item.find('link').text
-                items.append({'title': title, 'link': link, 'source': feed['name']})
+                
+                # Before inserting, check if the item already exists to avoid duplicates
+                cursor.execute("SELECT COUNT(*) FROM matthew_rssitems WHERE rssitemurl = %s", (link,))
+                if cursor.fetchone()[0] == 0:
+                    cursor.execute(
+                        "INSERT INTO matthew_rssitems (rssfeedid, rssitemurl, rssitemtitle, createdat, updatedat) VALUES (%s, %s, %s, %s, %s)",
+                        (rssfeedid, link, title, dt.datetime.now(), dt.datetime.now())
+                    )
         except Exception as e:
-            print(f"Failed to process feed {feed['url']}: {e}")
+            print(f"Failed to process feed {rssfeedurl}: {e}")
+    
+    new_connection.commit()
+    cursor.close()
+    db.db_connect_close(new_connection)
+    
+    # Redirect back to the RSS display page
+    return redirect(url_for('rss'))
 
-    # Rendering the items to a simple HTML template
+@app.route('/dcx/rss')
+def rss():
+    chat_ids = get_distinct_chat_ids()
+    
+    new_connection = db.db_connect_open()
+    cursor = new_connection.cursor()
+    
+    cursor.execute(
+        """
+        SELECT r.rssitemtitle, r.rssitemurl, f.rssfeedtitle, r.createdat 
+        FROM matthew_rssitems r
+        JOIN matthew_rssfeeds f ON r.rssfeedid = f.rssfeedid
+        ORDER BY r.createdat DESC
+        """
+    )
+    items = cursor.fetchall()
+    
+    for i, item in enumerate(items):
+        items[i] = item[:3] + (item[3].strftime('%Y-%m-%d %H:%M:%S'),)
+    
+    cursor.close()
+    db.db_connect_close(new_connection)
+    
     return render_template('rss.html', items=items, chat_ids=chat_ids, environ=os.environ)
 
 ############################################################################################################
