@@ -31,6 +31,17 @@ def index():
     log.log_message("INDEX PAGE")
     return render_template('index.html')
 
+log_file_path = 'matthew_log.txt'  # Update this path
+@app.route('/logs')
+def show_logs():
+    try:
+        with open(log_file_path, 'r') as file:
+            content = file.read()
+        return Response(content, mimetype='text/plain')
+    except FileNotFoundError:
+        return "Log file not found.", 404
+
+
 def get_distinct_chat_ids():
     new_connection = db.db_connect_open()
     cursor = new_connection.cursor()
@@ -98,110 +109,114 @@ def reset_streaming_answer():
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    using_llm_model = "gpt-4-0125-preview"
-    encoding = tt.encoding_for_model(using_llm_model)
-    
-    print("MODEL: ", using_llm_model)
-    print("ENCODING: ", encoding)
-    
-    if 'conversation' not in session:
-        session['conversation'] = [{
-            "role": "system", 
-            "content": """
-                You are Anna, a Commodity Trading Advisor at DCX (www.dcx.group), specialising in agricultural commodities. Known for your succinct advice, you cater specifically to industry insiders, offering insights into trading, logistics, finance, and legal matters. Your responses should be:
-            """
-        }]
-        session.modified = True
-    
-    conversation_string = ' '.join(message['content'] for message in session['conversation'])
-    tokens_in_conversation = (len(encoding.encode(conversation_string)))
-    print(f"Tokens in conversation: {tokens_in_conversation}")
-    
-    chat_id = None
-    chat_prompt = session['conversation'][0]['content'].strip()
-    
-    # Deal with the user's question:
-    user_input = request.form['question']
-    session['conversation'].append({"role": "user", "content": user_input})
-    session.modified = True
-    question_connection = db.db_connect_open()
-    cursor = question_connection.cursor()
-    
-    user_id = 'b79cb3ba-745e-5d9a-8903-4a02327a7e09'  # Replace with actual logic to retrieve user UUID
-    
-    if 'chat_id' not in session:
-        cursor.execute(
-            "INSERT INTO matthew_chats (userid, chatmodel, chatprompt) VALUES (%s, %s, %s) RETURNING chatid;",
-            (user_id, using_llm_model, chat_prompt)
-        )
-        chat_id = cursor.fetchone()[0]
-        session['chat_id'] = chat_id
-        session.modified = True
-    else:
-        chat_id = session['chat_id']
-    
-    cursor.execute(
-        """
-        INSERT INTO matthew_chatmessages (chatid, userid, chatmessagecontent, chatmessagetype)
-        VALUES (%s, %s, %s, 'question')
-        """,
-        (chat_id, user_id, user_input)
-    )
-    
-    question_connection.commit()
-    cursor.close()
-    db.db_connect_close(question_connection)
-      
-    # Now do the API call to the LLM
-    response = ai.chat.completions.create(
-        model=using_llm_model,
-        response_format={"type": "text"},
-        messages=session['conversation'],
-        stream=True,
-        temperature=1.3,
-        max_tokens=200,
-    )
-    
-    # Now deal with the answer from the LLM
-    answer = ""
-    session['chat_history'] = []
-
-    for chunk in response:
-        new_chunk = chunk.choices[0].delta.content
-        if new_chunk:
-            session['chat_history'].append(new_chunk)
-            session.modified = True
-            print(new_chunk)
-            answer += new_chunk
-        elif new_chunk is None and len(answer) > 1:
-            session['chat_history'].append(f"<br /><strong>TOKENS:</strong> {tokens_in_conversation}")
-            session['chat_history'].append("ENDEND")
-            session.modified = True
-    
-    print(f"CHAT ID: {chat_id}")
-    
-    if answer is not None:
-        # conversation.append({"role": "assistant", "content": answer})
-        session['conversation'].append({"role": "assistant", "content": answer})
-        session.modified = True
+    try:
+        using_llm_model = "gpt-4-0125-preview"
+        encoding = tt.encoding_for_model(using_llm_model)
         
-        answer_connection = db.db_connect_open()
-        cursor = answer_connection.cursor()
+        print("MODEL: ", using_llm_model)
+        print("ENCODING: ", encoding)
+        
+        if 'conversation' not in session:
+            session['conversation'] = [{
+                "role": "system", 
+                "content": """
+                    You are Anna, a Commodity Trading Advisor at DCX (www.dcx.group), specialising in agricultural commodities. Known for your succinct advice, you cater specifically to industry insiders, offering insights into trading, logistics, finance, and legal matters. Your responses should be:
+                """
+            }]
+            session.modified = True
+        
+        conversation_string = ' '.join(message['content'] for message in session['conversation'])
+        tokens_in_conversation = (len(encoding.encode(conversation_string)))
+        print(f"Tokens in conversation: {tokens_in_conversation}")
+        
+        chat_id = None
+        chat_prompt = session['conversation'][0]['content'].strip()
+        
+        # Deal with the user's question:
+        user_input = request.form['question']
+        session['conversation'].append({"role": "user", "content": user_input})
+        session.modified = True
+        question_connection = db.db_connect_open()
+        cursor = question_connection.cursor()
+        
+        user_id = 'b79cb3ba-745e-5d9a-8903-4a02327a7e09'  # Replace with actual logic to retrieve user UUID
+        
+        if 'chat_id' not in session:
+            cursor.execute(
+                "INSERT INTO matthew_chats (userid, chatmodel, chatprompt) VALUES (%s, %s, %s) RETURNING chatid;",
+                (user_id, using_llm_model, chat_prompt)
+            )
+            chat_id = cursor.fetchone()[0]
+            session['chat_id'] = chat_id
+            session.modified = True
+        else:
+            chat_id = session['chat_id']
+        
         cursor.execute(
             """
             INSERT INTO matthew_chatmessages (chatid, userid, chatmessagecontent, chatmessagetype)
-            VALUES (%s, %s, %s, 'answer')
+            VALUES (%s, %s, %s, 'question')
             """,
-            (chat_id, user_id, answer)
+            (chat_id, user_id, user_input)
         )
-        answer_connection.commit()
-        cursor.close()
-        db.db_connect_close(answer_connection)
         
+        question_connection.commit()
+        cursor.close()
+        db.db_connect_close(question_connection)
+        
+        # Now do the API call to the LLM
+        response = ai.chat.completions.create(
+            model=using_llm_model,
+            response_format={"type": "text"},
+            messages=session['conversation'],
+            stream=True,
+            temperature=1.3,
+            max_tokens=200,
+        )
+        
+        # Now deal with the answer from the LLM
+        answer = ""
+        session['chat_history'] = []
 
-    # print("CONVERSATION 3: ", conversation)
-    print("SESSION END: ", session['conversation'])    
-    return ('', 204)  # Return an empty response for the POST request
+        for chunk in response:
+            new_chunk = chunk.choices[0].delta.content
+            if new_chunk:
+                session['chat_history'].append(new_chunk)
+                session.modified = True
+                print(new_chunk)
+                answer += new_chunk
+            elif new_chunk is None and len(answer) > 1:
+                session['chat_history'].append(f"<br /><strong>TOKENS:</strong> {tokens_in_conversation}")
+                session['chat_history'].append("ENDEND")
+                session.modified = True
+        
+        log.log_message(f"CHAT ID: {chat_id}")
+        
+        if answer is not None:
+            # conversation.append({"role": "assistant", "content": answer})
+            session['conversation'].append({"role": "assistant", "content": answer})
+            session.modified = True
+            
+            answer_connection = db.db_connect_open()
+            cursor = answer_connection.cursor()
+            cursor.execute(
+                """
+                INSERT INTO matthew_chatmessages (chatid, userid, chatmessagecontent, chatmessagetype)
+                VALUES (%s, %s, %s, 'answer')
+                """,
+                (chat_id, user_id, answer)
+            )
+            answer_connection.commit()
+            cursor.close()
+            db.db_connect_close(answer_connection)
+            
+
+        # print("CONVERSATION 3: ", conversation)
+        log.log_message(f"SESSION END: {session['conversation']}")    
+        return ('', 204)  # Return an empty response for the POST request
+    except Exception as e:
+        log.log_message(f"Error in /ask: {e}")
+        return "An error occurred", 500
 
 @app.route('/stream')
 def stream():
