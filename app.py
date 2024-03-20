@@ -13,7 +13,9 @@ import tiktoken as tt
 import matthew_logger as log
 import matthew_database as db
 
+#######################################################################################
 # Setup stuff
+
 app = Flask(__name__)
 dotenv.load_dotenv()
 ai.api_key = os.getenv("OPENAI_API_KEY")
@@ -22,6 +24,8 @@ app.secret_key = 'your_secret_key_123'
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
+
+#######################################################################################
 # OPEN DATABASE CONNECTION
 new_connection = db.db_connect_open()
 db.check_or_create_tables(new_connection)
@@ -42,12 +46,11 @@ def show_logs():
     except FileNotFoundError:
         return "Log file not found.", 404
 
-
 def get_distinct_chat_ids():
     new_connection = db.db_connect_open()
     cursor = new_connection.cursor()
     
-    cursor.execute("SELECT DISTINCT chatid FROM matthew_chatmessages ORDER BY chatid")
+    cursor.execute("SELECT chatid FROM matthew_chats ORDER BY chatid")
     chat_ids = cursor.fetchall()
     
     cursor.close()
@@ -55,12 +58,111 @@ def get_distinct_chat_ids():
     
     return chat_ids
 
-@app.route('/dcx/chat')
-def chat():
-    chat_ids = get_distinct_chat_ids()
-    return render_template('chat.html', chat_ids=chat_ids, environ=os.environ)
+def get_distinct_prompt_ids():
+    new_connection = db.db_connect_open()
+    cursor = new_connection.cursor()
+    
+    cursor.execute("SELECT promptid, prompttitle, prompttext FROM matthew_chatprompts ORDER BY promptid")
+    prompt_ids = cursor.fetchall()
+    
+    cursor.close()
+    new_connection.close()
+    
+    return prompt_ids
 
-@app.route('/dcx/chat/<int:chat_id>')
+
+#######################################################################################
+# Prompts
+
+@app.route('/dcx/prompts/')
+def prompts():
+    prompt_ids = get_distinct_prompt_ids()
+    return render_template('prompts.html', prompt_ids=prompt_ids, environ=os.environ)
+
+@app.route('/dcx/prompt/new', methods=['GET', 'POST'])
+def prompt_new():
+    if request.method == 'POST':
+        prompt_title = request.form.get('prompttitle')
+        prompt_text = request.form.get('prompttext')
+
+        # Assuming you have a function to get a DB connection
+        new_connection = db.db_connect_open()
+        cursor = new_connection.cursor()
+        
+        cursor.execute("""
+            INSERT INTO matthew_chatprompts (prompttitle, prompttext) 
+            VALUES (%s, %s)
+        """, (prompt_title, prompt_text))
+        
+        new_connection.commit()
+        cursor.close()
+        db.db_connect_close(new_connection)
+        
+        return redirect(url_for('prompt_new'))  # Redirect to the same page or to another page as confirmation
+
+    # If not a POST request, just render the form
+    return render_template('prompt_new.html', environ=os.environ)
+
+@app.route('/dcx/prompts/<int:prompt_id>', methods=['GET', 'POST'])
+def view_prompt(prompt_id):
+    new_connection = db.db_connect_open()
+    cursor = new_connection.cursor()
+
+    if request.method == 'POST':
+        # Retrieve updated data from form
+        prompt_title = request.form['prompttitle']
+        prompt_text = request.form['prompttext']
+
+        # Update the database
+        cursor.execute(
+            "UPDATE matthew_chatprompts SET prompttitle = %s, prompttext = %s, updatedat = CURRENT_TIMESTAMP WHERE promptid = %s",
+            (prompt_title, prompt_text, prompt_id)
+        )
+        new_connection.commit()
+
+        # Redirect to avoid form resubmission issues
+        return redirect(url_for('view_prompt', prompt_id=prompt_id))
+    
+    # For a GET request, or initially for a POST request
+    cursor.execute(
+        "SELECT promptid, prompttitle, prompttext FROM matthew_chatprompts WHERE promptid = %s",
+        (prompt_id,)
+    )
+    prompt_details = cursor.fetchone()
+    cursor.close()
+    new_connection.close()
+
+    if prompt_details:
+        promptid, prompttitle, prompttext = prompt_details
+    else:
+        prompttitle, prompttext = None, None
+
+    return render_template('prompts_detail.html', promptid=promptid, prompttitle=prompttitle, prompttext=prompttext, environ=os.environ)
+
+
+#######################################################################################
+# Chats
+
+@app.route('/dcx/chats/')
+def chats():
+    chat_ids = get_distinct_chat_ids()
+    return render_template('chats.html', chat_ids=chat_ids, environ=os.environ)
+
+@app.route('/dcx/chats/new')
+def chat():
+    new_connection = db.db_connect_open()
+    cursor = new_connection.cursor()
+    cursor.execute("SELECT promptid, prompttitle FROM matthew_chatprompts ORDER BY createdat DESC")
+    prompts = cursor.fetchall()
+    cursor.close()
+    db.db_connect_close(new_connection)
+    
+    for prompt in prompts:
+        log.log_message(prompt)
+    
+    return render_template('chats_new.html', prompts=prompts, environ=os.environ)
+
+@app.route('/dcx/chats/<int:chat_id>')
 def view_chat(chat_id):
     new_connection = db.db_connect_open()
     cursor = new_connection.cursor()
@@ -72,7 +174,7 @@ def view_chat(chat_id):
     messages = cursor.fetchall() 
     
     cursor.execute(
-        "SELECT chatmodel, chatprompt FROM matthew_chats WHERE chatid = %s",
+        "SELECT chatmodel, promptid, chatprompttitle, chatprompt FROM matthew_chats WHERE chatid = %s",
         (chat_id,)
     )
     chat_details = cursor.fetchone()
@@ -81,12 +183,11 @@ def view_chat(chat_id):
     new_connection.close()
     
     if chat_details:
-        chat_model, chat_prompt = chat_details
+        chatmodel, promptid, prompttitle, prompttext = chat_details
     else:
-        chat_model, chat_prompt = None, None
+        chatmodel, promptid, prompttitle, prompttext = None, None, None, None
     
-    chat_ids = get_distinct_chat_ids()
-    return render_template('chatrecord.html', chat_model=chat_model, chat_prompt=chat_prompt, messages=messages, environ=os.environ, chat_ids=chat_ids)
+    return render_template('chats_detail.html', chatmodel=chatmodel, promptid=promptid, prompttitle=prompttitle, prompttext=prompttext, messages=messages, environ=os.environ)
 
 @app.route('/read')
 def read():
@@ -106,55 +207,50 @@ def reset_streaming_answer():
     session.pop('chat_history', None)
     return 'All reset.'
 
-#######################################################################################
-
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
         using_llm_model = "gpt-4-0125-preview"
         encoding = tt.encoding_for_model(using_llm_model)
         
-        print("MODEL: ", using_llm_model)
-        print("ENCODING: ", encoding)
+        prompt_id = request.form['prompt_id']
+        prompt_connection = db.db_connect_open()
+        cursor = prompt_connection.cursor()
+        
+        cursor.execute("SELECT prompttitle, prompttext FROM matthew_chatprompts WHERE promptid = %s", (prompt_id,))
+        prompt = cursor.fetchall()
+        if prompt:
+            prompttitle = prompt[0][0]
+            prompt = prompt[0][1]
+        else:
+            prompttitle = "No prompt found."
+            prompt = "No prompt found."
+        
+        prompt_connection.commit()
+        cursor.close()
+        db.db_connect_close(prompt_connection)
+        
+        print(f"Prompt: {prompt}")
+        print(f"Prompt Title: {prompttitle}")
+        print(f"Prompt Text: {prompt}")
         
         if 'conversation' not in session:
             session['conversation'] = [{
                 "role": "system", 
-                "content": """                    
-                    You are Anna, a Commodity Trading Advisor at DCX (www.dcx.group), specialising in agricultural commodities. Known for your succinct advice, you cater specifically to industry insiders, offering insights into trading, logistics, finance, and legal matters. Your responses should be:
-
-                    Be Direct and Specific: Address queries with straightforward, actionable advice. Focus on the export/import of commodities, providing specifics rather than generalities.
-
-                    Limited length: unless the user requests for specifics, more information and/or details, reply with maximum 75 words, forcing yourself to be extremely concise without many details
-
-                    Utilize Expertise: 
-                    Share insights based on your deep understanding of the field, citing authoritative sources (e.g., DGFT, SFA) when relevant. Include direct links for immediate reference.
-
-                    Network Connections: Offer direct connections within the DCX network pertinent to the user's specific needs in commodity trading.
-
-                    Clarity in Communication: Use clear British English, aiming for simplicity and directness without sacrificing informativeness.
-
-                    Regulatory and Logistics Focus: Center your advice on regulatory compliance, freight, and logistics, where DCX can add value, avoiding market insights unless explicitly requested.
-
-                    Concise Closing: End with a concise question related to the user's next steps in their export/import journey, inviting further detail where necessary.
-
-                    Brevity: Keep responses succinct, focusing only on the most relevant details for informed decision-making. 
-
-                    Use the "Signed Up to DCX" file for background information without disclosing company names, focusing instead on their industry and needs to provide relevant advice. 
-
-                    Respond authoritatively, driving users to optimize their use of DCX platforms. 
-
-                    For further support, direct users to DCX's customer service at support@dcx.group.
-                """
+                "content": prompt
             }]
             session.modified = True
         
         conversation_string = ' '.join(message['content'] for message in session['conversation'])
         tokens_in_conversation = (len(encoding.encode(conversation_string)))
         print(f"Tokens in conversation: {tokens_in_conversation}")
-        
+         
         chat_id = None
+        chat_prompt_title = prompttitle
         chat_prompt = session['conversation'][0]['content'].strip()
+        
+        print("CHAT PROMPT TITLE: ", chat_prompt_title)
+        print ("CHAT PROMPT: ", chat_prompt)
         
         # Deal with the user's question:
         user_input = request.form['question']
@@ -165,16 +261,29 @@ def ask():
         
         user_id = 'b79cb3ba-745e-5d9a-8903-4a02327a7e09'  # Replace with actual logic to retrieve user UUID
         
+        print("USER INPUT: ", user_input)
+        print("USER ID: ", user_id)
+        print("CONVERSATION 2: ", session['conversation'])
+        print("CHAT ID: ", chat_id)
+        
         if 'chat_id' not in session:
+            print("NO CHAT ID SO INSERTING INTO DATABASE")
+            print("USER ID: ", user_id)
+            print("PROMPT ID: ", prompt_id)
+            print("USING LLM MODEL: ", using_llm_model)
+            print("CHAT PROMPT TITLE: ", chat_prompt_title)
+            print("CHAT PROMPT: ", chat_prompt) 
             cursor.execute(
-                "INSERT INTO matthew_chats (userid, chatmodel, chatprompt) VALUES (%s, %s, %s) RETURNING chatid;",
-                (user_id, using_llm_model, chat_prompt)
+                "INSERT INTO matthew_chats (userid, promptid, chatmodel, chatprompttitle, chatprompt) VALUES (%s, %s, %s, %s, %s) RETURNING chatid;",
+                (user_id, prompt_id, using_llm_model, chat_prompt_title, chat_prompt)
             )
             chat_id = cursor.fetchone()[0]
             session['chat_id'] = chat_id
             session.modified = True
         else:
             chat_id = session['chat_id']
+        
+        print("NEW CHAT ID NOW: ", chat_id)
         
         cursor.execute(
             """
@@ -255,6 +364,7 @@ def stream():
     return Response(stream_with_context(generate()), content_type='text/event-stream')
 
 ############################################################################################################
+# RSS
 
 @app.route('/dcx/rss/refresh')
 def refresh_rss():

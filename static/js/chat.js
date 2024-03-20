@@ -18,7 +18,9 @@ function scrollToBottom() {
 // First, grab the user's question from the question box
 function askQuestion() {
     document.getElementById('askButton').disabled = true;
+    document.querySelector('select[name="prompt_id"]').disabled = true;
     const question = document.getElementById("questionInput").value;
+    const promptId = document.getElementById("prompt_id").value;
     questionInput.value = "";
     firstChunkReceived = false; // Reset the flag for each new question
 
@@ -46,7 +48,7 @@ function askQuestion() {
             console.log("Question asked.");
         }
     }
-    xhr.send("question=" + encodeURIComponent(question));
+    xhr.send("question=" + encodeURIComponent(question) + "&prompt_id=" + encodeURIComponent(promptId));
 }
 
 

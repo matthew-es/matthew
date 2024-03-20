@@ -1,0 +1,18 @@
+{% extends 'base_dcx.html' %}    
+
+{% block pagetitle %}New Prompt{% endblock %}
+{% block h1title %}New Prompt{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <div>
+            <label for="prompttitle">Prompt Title:</label>
+            <input type="text" id="prompttitle" name="prompttitle" required>
+        </div>
+        <div>
+            <label for="prompttext">Prompt Text:</label>
+            <textarea id="prompttext" name="prompttext" rows="4" required></textarea>
+        </div>
+        <button type="submit">Submit Prompt</button>
+    </form>
+{% endblock %}

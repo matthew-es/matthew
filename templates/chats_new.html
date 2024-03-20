@@ -8,6 +8,12 @@
     </div>
 
     <form id="chatForm" onsubmit="askQuestion(); return false;">
+        <select name="prompt_id" id="prompt_id">
+            {% for prompt_id, prompt_title in prompts %}
+                <option value="{{ prompt_id }}">{{ prompt_title }}</option>
+            {% endfor %}
+        </select>
+        <br />
         <input type="text" id="questionInput" placeholder="Ask a question...">
         <button type="submit" id="askButton">Ask</button>
     </form>

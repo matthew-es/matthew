@@ -1,0 +1,18 @@
+{% extends 'base_dcx.html' %}    
+
+{% block pagetitle %}Prompt Detail{% endblock %}
+{% block h1title %}Prompt Detail{% endblock %}
+
+{% block content %}
+<form method="post">
+    <div>
+        <label for="prompttitle">Prompt Title:</label>
+        <input type="text" id="prompttitle" name="prompttitle" value="{{ prompttitle }}" required>
+    </div>
+    <div>
+        <label for="prompttext">Prompt Text:</label>
+        <textarea id="prompttext" name="prompttext" rows="4" required>{{ prompttext }}</textarea>
+    </div>
+    <button type="submit">Update Prompt</button>
+</form>
+{% endblock %}

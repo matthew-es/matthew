@@ -1,0 +1,14 @@
+{% extends 'base_dcx.html' %}    
+
+{% block pagetitle %}Chats{% endblock %}
+{% block h1title %}Chats{% endblock %}
+
+{% block content %}
+    <ul>    
+    {% for chat_id in chat_ids %}
+            <li>
+                <a href="{{ url_for('view_chat', chat_id=chat_id[0]) }}">{{ chat_id[0] }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
