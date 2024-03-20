@@ -92,13 +92,16 @@ def prompt_new():
         cursor.execute("""
             INSERT INTO matthew_chatprompts (prompttitle, prompttext) 
             VALUES (%s, %s)
+            RETURNING promptid
         """, (prompt_title, prompt_text))
+        
+        new_prompt_id = cursor.fetchone()[0]
         
         new_connection.commit()
         cursor.close()
         db.db_connect_close(new_connection)
         
-        return redirect(url_for('prompt_new'))  # Redirect to the same page or to another page as confirmation
+        return redirect(url_for('view_prompt', prompt_id=new_prompt_id))  # Redirect to the same page or to another page as confirmation
 
     # If not a POST request, just render the form
     return render_template('prompt_new.html', environ=os.environ)
@@ -121,7 +124,7 @@ def view_prompt(prompt_id):
         new_connection.commit()
 
         # Redirect to avoid form resubmission issues
-        return redirect(url_for('view_prompt', prompt_id=prompt_id))
+        return redirect(url_for('prompts'))
     
     # For a GET request, or initially for a POST request
     cursor.execute(
@@ -304,7 +307,7 @@ def ask():
             messages=session['conversation'],
             stream=True,
             temperature=1.3,
-            max_tokens=200,
+            max_tokens=300,
         )
         
         # Now deal with the answer from the LLM
