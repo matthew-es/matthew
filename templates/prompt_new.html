@@ -16,3 +16,7 @@
         <button type="submit">Submit Prompt</button>
     </form>
 {% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
