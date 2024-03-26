@@ -298,3 +298,11 @@ padding: 10px 0;
 background-color: #000;
 color: #fff;
 }
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #000000; /* Dark background */
+        color: #ffffff; /* Light text */
+    }
+    /* Define other dark mode styles here */
+}
