@@ -1,0 +1,147 @@
+{% extends 'base_dcx.html' %}    
+
+{% block pagetitle %}Chat{% endblock %}
+{% block h1title %}Chat{% endblock %}
+
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <div id="conversation"></div>
+
+    <form id="chatForm">
+        <select name="llmmodelid" id="llmmodelid">
+            {% for llmmodelid, llmmodeltitle in llmmodels %}
+                <option value="{{ llmmodelid }}">{{ llmmodeltitle }}</option>
+            {% endfor %}
+        </select>
+        <select name="prompt_id" id="prompt_id">
+            {% for prompt_id, prompt_title in prompts %}
+                <option value="{{ prompt_id }}">{{ prompt_title }}</option>
+            {% endfor %}
+        </select>
+        <br />
+        <input type="text" id="questionInput" placeholder="Ask a question...">
+        <button type="button" id="askButton">Ask</button>
+    </form>
+
+    <script>
+       // Initiate sockets
+       var socket = io();
+       
+       // Places to display the conversation
+       var conversationDisplay = $('#conversation');
+       var thinkingP = null;
+
+       // Flag to prevent asking new questions while streaming
+       var isStreaming = false;
+
+       // First we ask the question on the front
+       function askQuestion() {
+            // If true, exits the whole ask function    
+            if (isStreaming) return;
+
+            // 1) Disable UI elements while streaming response
+            document.getElementById('askButton').disabled = true;
+            document.querySelector('select[name="prompt_id"]').disabled = true;
+            document.querySelector('select[name="llmmodelid"]').disabled = true;
+            isStreaming = true;
+
+            // 2) Grab the input information from the form
+            const question = document.getElementById("questionInput").value;
+            questionInput.value = '';
+            var prompt_id = $('#prompt_id').val(); 
+            var llmmodelid = $('#llmmodelid').val();
+
+            // 3) Display the question in a new paragraph inside the conversation div
+            const questionP = document.createElement("p");
+            questionP.textContent = question;
+            questionP.classList.add("user-question");
+            conversationDisplay.append(questionP); 
+
+            // 4) Display "Thinking..." and spinner until streaming chunks begin to arrive
+            thinkingP = document.createElement("p");
+            thinkingP.innerHTML = "Thinking...<span class=\"spinner\"></span>";
+            thinkingP.classList.add("gpt-response");
+            conversationDisplay.append(thinkingP); 
+
+            // 5)  Scroll the chat to the bottom
+            scrollToBottom();            
+
+            // 6) Send it all back to the server
+            socket.emit('ask_question', {
+                'question': question, 
+                'prompt_id': prompt_id,
+                'llmmodelid': llmmodelid
+            });
+        };
+
+        // Triggers for the ask function: ask button + enter key
+        document.getElementById('askButton').addEventListener('click', askQuestion);
+        document.getElementById("questionInput").addEventListener("keypress", function(event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                askQuestion();
+            }
+        });
+
+       // Now we listen for the replies from the server and APIs
+        socket.on('new_chunk', function(data) {            
+            
+            // 1) Get rid of "Thinking..." and the spinner, and start to stream the first chunks onto the screen
+            if (thinkingP && thinkingP.innerHTML.includes("Thinking...<span class=\"spinner\"></span>")) {
+                thinkingP.innerHTML = '';
+                thinkingP.appendChild(document.createTextNode(data.chunk));
+            } else if (thinkingP) {
+                thinkingP.appendChild(document.createTextNode(data.chunk));
+            }
+            
+            // 2) Scroll the chat to the bottom
+            scrollToBottom();
+        });
+
+        // And if the stream of chunks ends, do this
+        socket.on('stream_end', function() { // Assume the backend emits this on stream completion
+            console.log("Stream end received");
+
+            setTimeout(function() {
+                document.getElementById('askButton').disabled = false;
+                isStreaming = false;
+            }, 500); 
+
+        });
+
+    // Scrolls the chat to the bottom of the conversation div
+    function scrollToBottom() {
+        const conversationDiv = document.getElementById("conversation");
+        console.log("clientHeight is: " + conversationDiv.clientHeight, "scrollHeight is: " + conversationDiv.scrollHeight);
+        setTimeout(() => {
+            conversationDiv.scrollTop = conversationDiv.scrollHeight;
+        }, 0);
+    }
+
+    window.addEventListener("load", function() {
+        // Temporary password form
+        // var overlay = document.getElementById('passwordOverlay');
+        // var passwordInput = document.getElementById('passwordInput');
+        // var submitButton = document.getElementById('submitPassword');
+
+        // overlay.style.display = 'block';
+
+        // passwordForm.onsubmit = function(event) {
+        //     event.preventDefault();  // Prevent the form from being submitted
+        //     if (passwordInput.value != window.dcxChatPassword) {
+        //         alert("Incorrect password");
+        //         document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=device-width, initial-scale=1');
+        //     } else {
+        //         overlay.style.display = 'none';
+        //     }
+        // }
+        
+        // Reset the chat session on page reload
+        fetch('/reset').then(response => {
+        });
+    });
+    </script>
+
+{% endblock %}

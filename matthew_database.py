@@ -63,6 +63,17 @@ def check_or_create_tables(new_connection):
     new_connection.commit()
     
     cursor = new_connection.cursor()
+    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'matthew_llmmodels');")
+    exists = cursor.fetchone()[0]
+    if not exists:
+        cursor.execute(matthew_llmmodels_create_table())
+        new_connection.commit()
+        log.log_message("CREATED TABLE: llmmodels")
+    else:
+        log.log_message("TABLE: llmmodels already exists")
+    new_connection.commit()
+    
+    cursor = new_connection.cursor()
     cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'matthew_chatprompts');")
     exists = cursor.fetchone()[0]
     if not exists:
@@ -158,6 +169,17 @@ def matthew_users_create_table():
             FOR EACH ROW
             EXECUTE FUNCTION update_updatedat_column();
     """
+
+def matthew_llmmodels_create_table():
+    return """
+        CREATE TABLE matthew_llmmodels (
+        llmmodelid SERIAL PRIMARY KEY,
+        llmmodeltitle VARCHAR(255) NOT NULL,
+        createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+
 def matthew_chatprompts_create_table():
     return """
         CREATE TABLE matthew_chatprompts (
@@ -174,6 +196,7 @@ def matthew_chats_create_table():
         CREATE TABLE matthew_chats (
         chatid SERIAL PRIMARY KEY,
         userid UUID NOT NULL,
+        llmodelid INTEGER NOT NULL,
         promptid INTEGER NOT NULL,
         chatmodel VARCHAR(255) NOT NULL,
         chatprompttitle VARCHAR(255),
@@ -181,6 +204,7 @@ def matthew_chats_create_table():
         createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userid) REFERENCES matthew_users(uuid),
+        FOREIGN KEY (llmmodelid) REFERENCES matthew_llmmodels(llmmodelid),
         FOREIGN KEY (promptid) REFERENCES matthew_chatprompts(promptid)
     );
     """
@@ -224,10 +248,27 @@ def matthew_rssitems_create_table():
         FOREIGN KEY (rssfeedid) REFERENCES matthew_rssfeeds(rssfeedid)
     );
     """
+##############################
+##############################
+# TABLE UPDATES
+
+# def udpates_tables(new_connection):
+#     cursor = new_connection.cursor()
+    
+#     cursor.execute("ALTER TABLE matthew_chats ADD COLUMN llmmodelid VARCHAR(255);")
+#     cursor.execute("UPDATE matthew_chats SET llmmodelid = 1;")
+#     cursor.execute("UPDATE matthew_chats SET llmmodeltitle = 1;")
+#     cursor.execute("ALTER TABLE matthew_chats ALTER COLUMN chat_status SET NOT NULL;")
+    
+#     cursor.close()
+#     return    
+
+
 
 ##############################
 ### OPERATIONS QUERIES ##################
 # Symbols
+
 def symbols_select_count():
     return "SELECT COUNT(*) FROM Symbols;"
 

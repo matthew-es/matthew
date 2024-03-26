@@ -1,5 +1,7 @@
 from flask import Flask, Response, stream_with_context, render_template, request, session, redirect, url_for, jsonify
 from flask_session import Session
+from flask_socketio import SocketIO, emit
+
 import os
 import dotenv
 import time
@@ -9,6 +11,7 @@ import xml.etree.ElementTree as ET
 
 import openai as ai
 import tiktoken as tt
+import anthropic
 
 import matthew_logger as log
 import matthew_database as db
@@ -23,12 +26,15 @@ app.secret_key = 'your_secret_key_123'
 
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
+socketio = SocketIO(app)
 
 
 #######################################################################################
-# OPEN DATABASE CONNECTION
+# DATABASE STUFF
+
 new_connection = db.db_connect_open()
 db.check_or_create_tables(new_connection)
+# db.udpates_tables(new_connection)
 db.db_connect_close(new_connection)
 
 @app.route('/')
@@ -45,6 +51,8 @@ def show_logs():
         return Response(content, mimetype='text/plain')
     except FileNotFoundError:
         return "Log file not found.", 404
+
+#######################################################################################
 
 def get_distinct_chat_ids():
     new_connection = db.db_connect_open()
@@ -155,15 +163,17 @@ def chats():
 def chat():
     new_connection = db.db_connect_open()
     cursor = new_connection.cursor()
+    
     cursor.execute("SELECT promptid, prompttitle FROM matthew_chatprompts ORDER BY createdat DESC")
     prompts = cursor.fetchall()
+    
+    cursor.execute("SELECT llmmodelid, llmmodeltitle FROM matthew_llmmodels ORDER BY llmmodeltitle DESC")
+    llmmodels = cursor.fetchall()
+    
     cursor.close()
     db.db_connect_close(new_connection)
-    
-    for prompt in prompts:
-        log.log_message(prompt)
-    
-    return render_template('chats_new.html', prompts=prompts, environ=os.environ)
+        
+    return render_template('chats_new.html', prompts=prompts, llmmodels=llmmodels, environ=os.environ)
 
 @app.route('/dcx/chats/<int:chat_id>')
 def view_chat(chat_id):
@@ -213,12 +223,19 @@ def reset_streaming_answer():
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
+        print(request.form['prompt_id'])
+        print(request.form['llmmodelid'])
+        print(request.form['question'])
+        
         using_llm_model = "gpt-4-0125-preview"
         encoding = tt.encoding_for_model(using_llm_model)
         
         prompt_id = request.form['prompt_id']
+        llmmodelid = request.form['llmmodelid']
         prompt_connection = db.db_connect_open()
         cursor = prompt_connection.cursor()
+    
+        print("LLM MODEL ID: ", llmmodelid)
         
         cursor.execute("SELECT prompttitle, prompttext FROM matthew_chatprompts WHERE promptid = %s", (prompt_id,))
         prompt = cursor.fetchall()
@@ -229,14 +246,15 @@ def ask():
             prompttitle = "No prompt found."
             prompt = "No prompt found."
         
+        cursor.execute("SELECT llmmodeltitle FROM matthew_llmmodels WHERE llmmodelid = %s", (llmmodelid,))
+        llmmodeltitle = cursor.fetchall()
+        
+        print("LLM MODEL TITLE: ", llmmodeltitle[0][0])
+        
         prompt_connection.commit()
         cursor.close()
         db.db_connect_close(prompt_connection)
-        
-        print(f"Prompt: {prompt}")
-        print(f"Prompt Title: {prompttitle}")
-        print(f"Prompt Text: {prompt}")
-        
+                
         if 'conversation' not in session:
             session['conversation'] = [{
                 "role": "system", 
@@ -246,15 +264,11 @@ def ask():
         
         conversation_string = ' '.join(message['content'] for message in session['conversation'])
         tokens_in_conversation = (len(encoding.encode(conversation_string)))
-        print(f"Tokens in conversation: {tokens_in_conversation}")
          
         chat_id = None
         chat_prompt_title = prompttitle
         chat_prompt = session['conversation'][0]['content'].strip()
-        
-        print("CHAT PROMPT TITLE: ", chat_prompt_title)
-        print ("CHAT PROMPT: ", chat_prompt)
-        
+                
         # Deal with the user's question:
         user_input = request.form['question']
         session['conversation'].append({"role": "user", "content": user_input})
@@ -263,19 +277,8 @@ def ask():
         cursor = question_connection.cursor()
         
         user_id = 'b79cb3ba-745e-5d9a-8903-4a02327a7e09'  # Replace with actual logic to retrieve user UUID
-        
-        print("USER INPUT: ", user_input)
-        print("USER ID: ", user_id)
-        print("CONVERSATION 2: ", session['conversation'])
-        print("CHAT ID: ", chat_id)
-        
-        if 'chat_id' not in session:
-            print("NO CHAT ID SO INSERTING INTO DATABASE")
-            print("USER ID: ", user_id)
-            print("PROMPT ID: ", prompt_id)
-            print("USING LLM MODEL: ", using_llm_model)
-            print("CHAT PROMPT TITLE: ", chat_prompt_title)
-            print("CHAT PROMPT: ", chat_prompt) 
+         
+        if 'chat_id' not in session: 
             cursor.execute(
                 "INSERT INTO matthew_chats (userid, promptid, chatmodel, chatprompttitle, chatprompt) VALUES (%s, %s, %s, %s, %s) RETURNING chatid;",
                 (user_id, prompt_id, using_llm_model, chat_prompt_title, chat_prompt)
@@ -354,7 +357,6 @@ def ask():
         log.log_message(f"Error in /ask: {e}")
         return "An error occurred", 500
 
-@app.route('/stream')
 def stream():
     def generate():
         if session.get('chat_history') is None:
@@ -365,6 +367,193 @@ def stream():
                 session.modified = True
 
     return Response(stream_with_context(generate()), content_type='text/event-stream')
+
+############################################################################################################
+# SocketsIO Chat
+
+@app.route('/dcx/chats/new/sockets')
+def chat_sockets():
+    new_connection = db.db_connect_open()
+    cursor = new_connection.cursor()
+    
+    cursor.execute("SELECT promptid, prompttitle FROM matthew_chatprompts ORDER BY createdat DESC")
+    prompts = cursor.fetchall()
+    
+    cursor.execute("SELECT llmmodelid, llmmodeltitle FROM matthew_llmmodels ORDER BY llmmodeltitle DESC")
+    llmmodels = cursor.fetchall()
+    
+    cursor.close()
+    db.db_connect_close(new_connection)
+        
+    return render_template('chats_new_sockets.html', prompts=prompts, llmmodels=llmmodels, environ=os.environ)
+
+
+@socketio.on('ask_question')
+def handle_question(data):
+    try:
+        # There is a user who wants to chat
+        user_id = 'b79cb3ba-745e-5d9a-8903-4a02327a7e09'
+        
+        # First, grab the form variables via sockets
+        question = data['question']
+        prompt_id = data['prompt_id'] 
+        llmmodelid = data['llmmodelid']
+        log.log_message(f"QUESTION: {question}")
+        log.log_message(f"PROMPT ID: {prompt_id}")
+        log.log_message(f"LLM MODEL ID: {llmmodelid}")
+        
+        # LLM model and encoding for counting tokens
+        using_llm_model = "gpt-4-0125-preview"
+        encoding = tt.encoding_for_model(using_llm_model)
+        
+        # Connection one: stuff before the api call
+        chat_connection_one = db.db_connect_open()
+        cursor = chat_connection_one.cursor()
+
+        # Deal with the LLM model
+        cursor.execute("SELECT llmmodeltitle FROM matthew_llmmodels WHERE llmmodelid = %s", (llmmodelid,))
+        llmmodeltitle = cursor.fetchone()[0]
+        log.log_message(f"LLM MODEL TITLE: {llmmodeltitle}")
+        
+        # Deal with the prompt                 
+        cursor.execute("SELECT prompttitle, prompttext FROM matthew_chatprompts WHERE promptid = %s", (prompt_id,))
+        prompt = cursor.fetchall()
+        prompttitle = prompt[0][0]
+        prompt = prompt[0][1]
+    
+        log.log_message(f"PROMPT TITLE: {prompttitle}: {prompt[:50]}")
+        
+        # CONTEXT WINDOW: Have we got a session with a chat already or not?
+        if 'chat' not in session:
+            session['chat'] = [{
+                "role": "system", 
+                "content": prompt
+            }]
+            session.modified = True
+            chat_characters = ' '.join(message['content'] for message in session['chat'])
+            log.log_message(f"SESSION (EXISTING) START STATE ON QUESTION LENGTH: {len(chat_characters)}")
+            log.log_message(f"NEW CHAT: {session['chat']}")    
+        else:
+            chat_characters = ' '.join(message['content'] for message in session['chat'])
+            log.log_message(f"EXISTING START STATE ON QUESTION LENGTH: {len(chat_characters)}")
+            log.log_message(f"EXISTING CHAT: {session['chat']}")
+        
+        # Character and token counting things
+        chat_string = ' '.join(message['content'] for message in session['chat'])
+        tokens_in_chat = (len(encoding.encode(chat_string)))
+        
+        # RECORD: Have we got an existing chat in the database or not?
+        chat_prompt = session['chat'][0]['content'].strip()  
+        if 'chat_id' not in session: 
+            cursor.execute(
+                "INSERT INTO matthew_chats (userid, promptid, chatmodel, chatprompttitle, chatprompt) VALUES (%s, %s, %s, %s, %s) RETURNING chatid;",
+                (user_id, prompt_id, llmmodeltitle, prompttitle, chat_prompt)
+            )
+            chat_id = cursor.fetchone()[0]
+            session['chat_id'] = chat_id
+            session.modified = True
+            log.log_message(f"NEW CHAT ID: {chat_id}")
+        else:
+            chat_id = session['chat_id']
+            log.log_message(f"EXISTING CHAT ID: {chat_id}")
+        
+        # Now we deal with the user's question: append to the session then record in the database:
+        session['chat'].append({"role": "user", "content": question})
+        session.modified = True
+        cursor.execute(
+            "INSERT INTO matthew_chatmessages (chatid, userid, chatmessagecontent, chatmessagetype) VALUES (%s, %s, %s, 'question')",
+            (chat_id, user_id, question)
+        )
+        
+        chat_connection_one.commit()
+        cursor.close()
+        db.db_connect_close(chat_connection_one)
+        
+        log.log_message(f"SESSION CHAT ID: {session['chat_id']}")
+        chat_characters = ' '.join(message['content'] for message in session['chat'])
+        log.log_message(f"SESSION CHAT WITH NEW QUESTION LENGTH: {len(chat_characters)}")
+        log.log_message(f"SESSION CHAT WITH NEW QUESTION FOR API: {session['chat']}")
+        
+        # Now do the API call to one of the LLMs
+        answer = ""
+        
+        openai_models = ["gpt-4-0125-preview", "gpt-3.5-turbo-0125"]
+        anthropic_models = ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"]
+
+        # Open AI API
+        if llmmodeltitle in openai_models:
+            try:
+                response = ai.chat.completions.create(
+                    model=llmmodeltitle,
+                    response_format={"type": "text"},
+                    messages=session['chat'],
+                    stream=True,
+                    temperature=1.3,
+                    max_tokens=300,
+                )
+            except Exception as e:
+                log.log_message(f"OPENAI ERROR: {e}")
+            
+            for chunk in response:
+                new_chunk = chunk.choices[0].delta.content
+                if new_chunk:
+                    print(new_chunk)
+                    emit('new_chunk', {'chunk': new_chunk}, broadcast=True)
+                    answer += new_chunk
+                elif new_chunk is None and len(answer) > 1:
+                    print("STREAM END NOW")
+                    emit('stream_end', broadcast=True)
+        
+        # Anthropic API
+        if llmmodeltitle in anthropic_models:
+            try:
+                response = anthropic.Anthropic().messages.create(
+                    model=llmmodeltitle,
+                    system=session['chat'][0]['content'],
+                    messages=session['chat'][1:],
+                    stream=True,
+                    temperature=1.0,
+                    max_tokens=300,
+                )
+            except Exception as e:
+                log.log_message(f"ANTHROPIC ERROR: {e}")
+            
+            for chunk in response:
+                if chunk.type == "content_block_delta":
+                    new_chunk = chunk.delta.text
+                    print(new_chunk)
+                    emit('new_chunk', {'chunk': new_chunk}, broadcast=True)
+                    answer += new_chunk
+                elif chunk.type == "message_stop":
+                    print("STREAM END NOW")
+                    emit('stream_end', broadcast=True)
+        
+        # Now deal with the complete answer for the context window and the database record
+        if answer is not None:
+            session['chat'].append({"role": "assistant", "content": answer})
+            session.modified = True
+            
+            # Database connection two: after the API call stuff
+            chat_connection_two = db.db_connect_open()
+            cursor = chat_connection_two.cursor()
+            cursor.execute(
+                "INSERT INTO matthew_chatmessages (chatid, userid, chatmessagecontent, chatmessagetype) VALUES (%s, %s, %s, 'answer')",
+                (chat_id, user_id, answer)
+            )
+            chat_connection_two.commit()
+            cursor.close()
+            db.db_connect_close(chat_connection_two)
+            
+
+        chat_characters = ' '.join(message['content'] for message in session['chat'])
+        log.log_message(f"SESSION WHOLE CHAT AT END LENGTH: {len(chat_characters)}")
+        log.log_message(f"SESSION WHOLE CHAT AT END: {session['chat']}")
+        return ('', 204)
+    except Exception as e:
+        log.log_message(f"Error in /ask: {e}")
+        emit('error', {'message': 'An XXX error occurred'}, broadcast=True) 
+        # return "An error occurred", 500
+
 
 ############################################################################################################
 # RSS
@@ -433,4 +622,4 @@ def rss():
 ############################################################################################################
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)

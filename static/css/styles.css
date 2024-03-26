@@ -10,14 +10,17 @@ body {
 }
 
 #container {
-max-width: 1000px;
-height: auto;
-overflow: hidden;
-margin: 0 auto;
-text-align: left;
-border: 1px solid #ccc;
-padding: 30px;
-}
+    max-width: 1000px;
+    position: relative;
+    border: 1px solid #000000;
+    min-height: 98vh;
+    height: 98vh;
+    overflow: hidden;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 30px;
+    text-align: left;
+    }
 
 .float-container {margin-bottom: 10px;}
 .float-left {float: left;}
@@ -39,20 +42,22 @@ h1 {
 #main{width: 100%;}
 
 #conversation {
-    height: calc(100vh - 200px);
+    border: 1px solid #ccc; 
+    height: calc(70vh - 200px);
     box-sizing: border-box;
     overflow-y: auto;
     max-width: 100%;
 
     margin-top: 20px;
-    padding-top: 10px;
+    margin-bottom: 20px;
+    padding-top: 20px;
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 20px;
 }
 
 #chatForm { 
-    position: fixed;
+    position: absolute;
     height: auto;
     bottom: 0;
     left: 0;
@@ -228,7 +233,7 @@ html {
 
 body {
     height: 100vh;
-    overflow: hidden;
+
     font-family: Arial;
     color: #000000;
 }
@@ -241,28 +246,34 @@ h1 {
 }
 
 #conversation {
-    height: calc(80vh -90px);
+    border: 1px solid #ccc; 
+    height: calc(70vh - 200px);
     box-sizing: border-box;
     overflow-y: auto;
     max-width: 100%;
 
-    margin-top: 0px;
-    padding-top: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding-top: 20px;
     padding-left: 20px;
     padding-right: 20px;
-    padding-bottom: 90px;
+    padding-bottom: 20px;
 }
 
 .user-question, .gpt-response, #questionInput, #chatForm button {
     font-size: 1.1rem; /* Larger font size for readability */
 }
 
-#chatForm {
-    flex-direction: column;
-    align-items: stretch;
-    position: fixed;
-    min-height: 90px;
-    padding: 10px;
+#chatForm { 
+    position: absolute;
+    height: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #f0f0f0;
 }
 
 #questionInput {

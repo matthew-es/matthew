@@ -3,3 +3,4 @@ venv/
 .env
 log.txt
 notes.txt
+apis_check.py

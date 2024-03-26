@@ -2,25 +2,39 @@ var firstChunkReceived = false; // Move the flag to a broader scope
 let currentReplyP = null;
 
 // Scroll the conversation to the bottom always
+
 function scrollToBottom() {
     const conversationDiv = document.getElementById("conversation");
     console.log("clientHeight is: " + conversationDiv.clientHeight, "scrollHeight is: " + conversationDiv.scrollHeight);
-    const inputArea = document.getElementById("chatForm");
-    const totalHeight = conversationDiv.scrollHeight + inputArea.offsetHeight;
-    const visibleHeight = conversationDiv.offsetHeight;
-    const isOverflowing = totalHeight > visibleHeight;
+
+    // Just use the scrollHeight of the conversation to scroll to the bottom
     setTimeout(() => {
         conversationDiv.scrollTop = conversationDiv.scrollHeight;
     }, 0);
 }
 
 
+// function scrollToBottom() {
+//     const conversationDiv = document.getElementById("conversation");
+//     console.log("clientHeight is: " + conversationDiv.clientHeight, "scrollHeight is: " + conversationDiv.scrollHeight);
+//     const inputArea = document.getElementById("chatForm");
+//     const totalHeight = conversationDiv.scrollHeight + inputArea.offsetHeight;
+//     const visibleHeight = conversationDiv.offsetHeight;
+//     const isOverflowing = totalHeight > visibleHeight;
+//     setTimeout(() => {
+//         conversationDiv.scrollTop = conversationDiv.scrollHeight;
+//     }, 0);
+// }
+
+
 // First, grab the user's question from the question box
 function askQuestion() {
     document.getElementById('askButton').disabled = true;
     document.querySelector('select[name="prompt_id"]').disabled = true;
+    document.querySelector('select[name="llmmodelid"]').disabled = true;
     const question = document.getElementById("questionInput").value;
     const promptId = document.getElementById("prompt_id").value;
+    const llmmodelId = document.getElementById("llmmodelid").value;
     questionInput.value = "";
     firstChunkReceived = false; // Reset the flag for each new question
 
@@ -48,7 +62,7 @@ function askQuestion() {
             console.log("Question asked.");
         }
     }
-    xhr.send("question=" + encodeURIComponent(question) + "&prompt_id=" + encodeURIComponent(promptId));
+    xhr.send("question=" + encodeURIComponent(question) + "&prompt_id=" + encodeURIComponent(promptId) + "&llmmodelid=" + encodeURIComponent(llmmodelId));
 }
 
 
@@ -61,6 +75,7 @@ function setupEventSource() {
 
     window.eventSource.onmessage = function(e) {
         document.getElementById('askButton').disabled = true;
+        console.log("Received Chunk: " + e.data);
 
         if (e.data === 'ENDEND') {
             document.getElementById('askButton').disabled = false;

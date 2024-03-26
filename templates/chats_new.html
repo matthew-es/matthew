@@ -8,6 +8,11 @@
     </div>
 
     <form id="chatForm" onsubmit="askQuestion(); return false;">
+        <select name="llmmodelid" id="llmmodelid">
+            {% for llmmodelid, llmmodeltitle in llmmodels %}
+                <option value="{{ llmmodelid }}">{{ llmmodeltitle }}</option>
+            {% endfor %}
+        </select>
         <select name="prompt_id" id="prompt_id">
             {% for prompt_id, prompt_title in prompts %}
                 <option value="{{ prompt_id }}">{{ prompt_title }}</option>
