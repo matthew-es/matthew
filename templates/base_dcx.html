@@ -22,7 +22,7 @@
         <div id="header">
             <div class="float-container">
                 <div class="float-left">
-                    <img src="{{ url_for('static', filename='/images/dcx-logo.png') }}" alt="DCX Bull" height="80">
+                    <img src="{{ url_for('static', filename='/images/dcx-logo.png') }}" alt="DCX Bull" height="50">
                 </div>
                 <div class="float-left">
                     <h1>
@@ -30,7 +30,7 @@
                     </h1>
                 </div>
                 <div class="float-right">
-                    <img src="{{ url_for('static', filename='/images/dcx-bull.png') }}" alt="DCX Bull" width="100" height="100">
+                    <img src="{{ url_for('static', filename='/images/dcx-bull.png') }}" alt="DCX Bull" height="50">
                 </div>
                 <div class="float-clear"></div>
             </div>
@@ -41,12 +41,9 @@
                 {% block h1title %}{% endblock %}
             </h1>
             <div id="nav">
-                <a href="/dcx/rss">RSS</a> | 
-                <a href="/dcx/rss/refresh">RSS Refresh</a> | 
-                <a href="/dcx/prompts">Prompts</a> | 
-                <a href="/dcx/chats">Chats</a> | 
-                <a href="/dcx/prompt/new">New Prompt</a> |
-                <a href="/dcx/chats/new/sockets">New Chat</a>
+                <a href="/dcx/rss">RSS</a> - <a href="/dcx/rss/refresh">Refresh</a> | 
+                <a href="/dcx/prompts">Prompts</a> - <a href="/dcx/prompt/new">New</a> | 
+                <a href="/dcx/chats">Chats</a> - <a href="/dcx/chats/new/sockets">New</a>
             </div>
 
             {% block content %}{% endblock %}
