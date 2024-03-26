@@ -203,7 +203,6 @@ def matthew_chats_create_table():
         createdat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updatedat TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userid) REFERENCES matthew_users(uuid),
-        FOREIGN KEY (llmmodelid) REFERENCES matthew_llmmodels(llmmodelid),
         FOREIGN KEY (promptid) REFERENCES matthew_chatprompts(promptid)
     );
     """
