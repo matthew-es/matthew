@@ -196,7 +196,7 @@ def matthew_chats_create_table():
         CREATE TABLE matthew_chats (
         chatid SERIAL PRIMARY KEY,
         userid UUID NOT NULL,
-        llmodelid INTEGER NOT NULL,
+        llmmodelid INTEGER NOT NULL,
         promptid INTEGER NOT NULL,
         chatmodel VARCHAR(255) NOT NULL,
         chatprompttitle VARCHAR(255),
