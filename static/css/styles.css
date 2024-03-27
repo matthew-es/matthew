@@ -9,12 +9,25 @@ body {
     color: #000000;
 }
 
-#container {
+#container_fixed {
+    position: relative;
+    max-width: 1000px;
+    border: 1px solid #000000;
+    min-height: 98vh;
+    height: 98vh;
+    overflow: hidden;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 30px;
+    text-align: left;
+    }
+
+#container_scroll {
     max-width: 1000px;
     position: relative;
     border: 1px solid #000000;
     min-height: 98vh;
-    height: 98vh;
+    height: auto;
     overflow: hidden;
     box-sizing: border-box;
     margin: 0 auto;

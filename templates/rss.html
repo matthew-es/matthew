@@ -1,9 +1,9 @@
-{% extends 'base_dcx.html' %}    
+{% extends 'base_container_scroll.html' %}    
 
 {% block pagetitle %}DCX RSS{% endblock %}
 {% block h1title %}DCX RSS{% endblock %}
 
-{% block content %}
+{% block content_for_base_container %}
     <ul>
         {% for title, link, source, created_at in items %}
         <li>

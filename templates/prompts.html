@@ -1,9 +1,6 @@
-{% extends 'base_dcx.html' %}    
+{% extends 'base_container_scroll.html' %}    
 
-{% block pagetitle %}Prompts{% endblock %}
-{% block h1title %}Prompts{% endblock %}
-
-{% block content %}
+{% block content_for_base_container %}
     <ul>    
     {% for prompt_id in prompt_ids %}
             <li>

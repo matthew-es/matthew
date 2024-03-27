@@ -1,0 +1,9 @@
+{% extends 'base_base.html' %}
+    
+    {% block content_for_base_base %}
+        <div id="container_scroll">
+            {% include 'snippet_header.html' %}
+
+            {% block content_for_base_container %}{% endblock %}
+        </div>
+    {% endblock %}

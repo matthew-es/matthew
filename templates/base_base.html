@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block pagetitle %}{% endblock %}</title>
+    <title>DCX | {{page_title}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
@@ -18,24 +18,9 @@
         </div>
     </div>
     
-    <div id="container">
-        <div id="header">
-            <div class="float-container">
-                <div class="float-left">
-                    <img src="{{ url_for('static', filename='/images/dcx-logo.png') }}" alt="DCX Bull" height="50">
-                </div>
-                <div class="float-left">
-                    <h1>
+    {% block content_for_base_base %}{% endblock %}
 
-                    </h1>
-                </div>
-                <div class="float-right">
-                    <img src="{{ url_for('static', filename='/images/dcx-bull.png') }}" alt="DCX Bull" height="50">
-                </div>
-                <div class="float-clear"></div>
-            </div>
-        </div>
-        
+    <!-- <div id="container">        
         <div id="main">
             <h1>
                 {% block h1title %}{% endblock %}
@@ -49,7 +34,7 @@
             {% block content %}{% endblock %}
 
         </div>
-    </div>
+    </div> -->
 
     {% block scripts %}{% endblock %}
     <script>

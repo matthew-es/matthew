@@ -84,11 +84,13 @@ def get_distinct_prompt_ids():
 
 @app.route('/dcx/prompts/')
 def prompts():
+    page_title = "Prompts"
     prompt_ids = get_distinct_prompt_ids()
-    return render_template('prompts.html', prompt_ids=prompt_ids, environ=os.environ)
+    return render_template('prompts.html', prompt_ids=prompt_ids, environ=os.environ, page_title=page_title)
 
 @app.route('/dcx/prompt/new', methods=['GET', 'POST'])
 def prompt_new():
+    page_title = "New Prompt"
     if request.method == 'POST':
         prompt_title = request.form.get('prompttitle')
         prompt_text = request.form.get('prompttext')
@@ -112,10 +114,11 @@ def prompt_new():
         return redirect(url_for('view_prompt', prompt_id=new_prompt_id))  # Redirect to the same page or to another page as confirmation
 
     # If not a POST request, just render the form
-    return render_template('prompt_new.html', environ=os.environ)
+    return render_template('prompt_new.html', environ=os.environ, page_title=page_title)
 
 @app.route('/dcx/prompts/<int:prompt_id>', methods=['GET', 'POST'])
 def view_prompt(prompt_id):
+    page_title = "Edit Prompt"
     new_connection = db.db_connect_open()
     cursor = new_connection.cursor()
 
@@ -148,7 +151,7 @@ def view_prompt(prompt_id):
     else:
         prompttitle, prompttext = None, None
 
-    return render_template('prompts_detail.html', promptid=promptid, prompttitle=prompttitle, prompttext=prompttext, environ=os.environ)
+    return render_template('prompts_detail.html', promptid=promptid, prompttitle=prompttitle, prompttext=prompttext, environ=os.environ, page_title=page_title)
 
 
 #######################################################################################
@@ -157,7 +160,8 @@ def view_prompt(prompt_id):
 @app.route('/dcx/chats/')
 def chats():
     chat_ids = get_distinct_chat_ids()
-    return render_template('chats.html', chat_ids=chat_ids, environ=os.environ)
+    page_title = "Chats"
+    return render_template('chats.html', chat_ids=chat_ids, environ=os.environ, page_title=page_title)
 
 @app.route('/dcx/chats/new')
 def chat():
@@ -373,6 +377,8 @@ def stream():
 
 @app.route('/dcx/chats/new/sockets')
 def chat_sockets():
+    page_title = "New Chat"
+
     new_connection = db.db_connect_open()
     cursor = new_connection.cursor()
     
@@ -385,8 +391,7 @@ def chat_sockets():
     cursor.close()
     db.db_connect_close(new_connection)
         
-    return render_template('chats_new_sockets.html', prompts=prompts, llmmodels=llmmodels, environ=os.environ)
-
+    return render_template('chats_new_sockets.html', prompts=prompts, llmmodels=llmmodels, environ=os.environ, page_title=page_title)
 
 @socketio.on('ask_question')
 def handle_question(data):
@@ -596,6 +601,7 @@ def refresh_rss():
 
 @app.route('/dcx/rss')
 def rss():
+    page_title = "RSS"
     chat_ids = get_distinct_chat_ids()
     
     new_connection = db.db_connect_open()
@@ -617,7 +623,7 @@ def rss():
     cursor.close()
     db.db_connect_close(new_connection)
     
-    return render_template('rss.html', items=items, chat_ids=chat_ids, environ=os.environ)
+    return render_template('rss.html', items=items, chat_ids=chat_ids, environ=os.environ, page_title=page_title)
 
 ############################################################################################################
 

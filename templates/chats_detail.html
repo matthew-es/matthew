@@ -1,9 +1,6 @@
-{% extends 'base_dcx.html' %}    
+{% extends 'base_container_scroll.html' %}
 
-{% block pagetitle %}Chat Record{% endblock %}
-{% block h1title %}Chat Record{% endblock %}
-
-{% block content %}
+{% block content_for_base_container %}
 <div>
     <p><strong>Chat Model:</strong> {{ chatmodel }}</p>
     <p><strong>Prompt ID:</strong> <a href="{{ url_for('view_prompt', prompt_id=promptid) }}">{{ promptid }}</a></p>
