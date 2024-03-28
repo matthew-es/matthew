@@ -1,8 +1,9 @@
 {% extends 'base_container_fixed.html' %}
 
 {% block content_for_base_container %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <div id="conversation"></div>
 
@@ -22,7 +23,7 @@
         <button type="button" id="askButton">Ask</button>
     </form>
 
-    <script>
+<script>
        // Initiate sockets
        var socket = io();
        
@@ -53,14 +54,14 @@
             // 3) Display the question in a new paragraph inside the conversation div
             const questionP = document.createElement("p");
             questionP.textContent = question;
-            questionP.classList.add("user-question");
+            questionP.classList.add("question");
             conversationDisplay.append(questionP); 
 
             // 4) Display "Thinking..." and spinner until streaming chunks begin to arrive
             thinkingP = document.createElement("p");
             thinkingP.innerHTML = "Thinking...<span class=\"spinner\"></span>";
-            thinkingP.classList.add("gpt-response");
-            conversationDisplay.append(thinkingP); 
+            thinkingP.classList.add("answer");
+            conversationDisplay.append(thinkingP);
 
             // 5)  Scroll the chat to the bottom
             scrollToBottom();            
@@ -82,16 +83,16 @@
             }
         });
 
+
        // Now we listen for the replies from the server and APIs
-        socket.on('new_chunk', function(data) {            
-            
+        socket.on('new_chunk', function(data) { 
             // 1) Get rid of "Thinking..." and the spinner, and start to stream the first chunks onto the screen
             if (thinkingP && thinkingP.innerHTML.includes("Thinking...<span class=\"spinner\"></span>")) {
                 thinkingP.innerHTML = '';
-                thinkingP.appendChild(document.createTextNode(data.chunk));
+                thinkingP.innerHTML += data.chunk;
             } else if (thinkingP) {
-                thinkingP.appendChild(document.createTextNode(data.chunk));
-            }
+                thinkingP.innerHTML += data.chunk;
+            }            
             
             // 2) Scroll the chat to the bottom
             scrollToBottom();
@@ -100,6 +101,12 @@
         // And if the stream of chunks ends, do this
         socket.on('stream_end', function() { // Assume the backend emits this on stream completion
             console.log("Stream end received");
+
+            thinkingP.innerHTML = marked.parse(thinkingP.innerHTML);
+
+            thinkingP.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+                });
 
             setTimeout(function() {
                 document.getElementById('askButton').disabled = false;

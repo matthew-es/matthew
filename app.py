@@ -1,6 +1,12 @@
-from flask import Flask, Response, stream_with_context, render_template, request, session, redirect, url_for, jsonify
+from flask import Flask, Response, stream_with_context, render_template, request, session, redirect, url_for, jsonify, flash
 from flask_session import Session
 from flask_socketio import SocketIO, emit
+
+from markupsafe import Markup
+import flask_wtf as fwtf
+import wtforms as wtf
+import bleach
+import markdown
 
 import os
 import dotenv
@@ -17,16 +23,20 @@ import matthew_logger as log
 import matthew_database as db
 
 #######################################################################################
-# Setup stuff
+# Flask app stuff, ENV variables, sessions, sockets
 
 app = Flask(__name__)
 dotenv.load_dotenv()
-ai.api_key = os.getenv("OPENAI_API_KEY")
-app.secret_key = 'your_secret_key_123'
-
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 socketio = SocketIO(app)
+
+
+#######################################################################################
+# Connect to APIs
+
+ai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 #######################################################################################
@@ -51,6 +61,20 @@ def show_logs():
         return Response(content, mimetype='text/plain')
     except FileNotFoundError:
         return "Log file not found.", 404
+
+#######################################################################################
+# Bleach for html sanitization
+
+app.config['BLEACH_ALLOWED_TAGS'] = list(bleach.sanitizer.ALLOWED_TAGS) + ['p', 'span', 'div', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'hr', 'em', 'u', 's', 'ol', 'ul', 'li', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'pre', 'code', 'blockquote']
+app.config['BLEACH_ALLOWED_ATTRIBUTES'] = {
+    **bleach.sanitizer.ALLOWED_ATTRIBUTES,
+    'span': ['style'],
+    'p': ['style'],
+    '*': ['class'],  # Allows the 'class' attribute on all tags
+    'div': ['class', 'id'],
+    'pre': ['class'],  # Allows class attributes for <pre> for styling purposes
+    'code': ['class'], 
+}
 
 #######################################################################################
 
@@ -188,8 +212,14 @@ def view_chat(chat_id):
         "SELECT chatmessagecontent, chatmessagetype FROM matthew_chatmessages WHERE chatid = %s ORDER BY chatmessageid",
         (chat_id,)
     )
-    messages = cursor.fetchall() 
-    
+    raw_messages = cursor.fetchall() 
+    messages = [(bleach.clean(
+        markdown.markdown(message, extensions=['fenced_code']),
+        tags=app.config['BLEACH_ALLOWED_TAGS'],
+        attributes=app.config['BLEACH_ALLOWED_ATTRIBUTES']
+        # , strip=True
+        ), status) for message, status in raw_messages]
+
     cursor.execute(
         "SELECT chatmodel, promptid, chatprompttitle, chatprompt FROM matthew_chats WHERE chatid = %s",
         (chat_id,)
@@ -494,17 +524,20 @@ def handle_question(data):
                     messages=session['chat'],
                     stream=True,
                     temperature=1.3,
-                    max_tokens=300,
+                    max_tokens=500,
                 )
             except Exception as e:
                 log.log_message(f"OPENAI ERROR: {e}")
-            
+
             for chunk in response:
                 new_chunk = chunk.choices[0].delta.content
+                
                 if new_chunk:
-                    print(new_chunk)
+                    # mk_new_chunk = markdown.markdown(new_chunk, extensions=['fenced_code'])
+                    # bleach_new_chunk = bleach.clean(new_chunk, tags=app.config['BLEACH_ALLOWED_TAGS'], attributes=app.config['BLEACH_ALLOWED_ATTRIBUTES'])
                     emit('new_chunk', {'chunk': new_chunk}, broadcast=True)
                     answer += new_chunk
+                    print(new_chunk)
                 elif new_chunk is None and len(answer) > 1:
                     print("STREAM END NOW")
                     emit('stream_end', broadcast=True)
@@ -518,7 +551,7 @@ def handle_question(data):
                     messages=session['chat'][1:],
                     stream=True,
                     temperature=1.0,
-                    max_tokens=300,
+                    max_tokens=500,
                 )
             except Exception as e:
                 log.log_message(f"ANTHROPIC ERROR: {e}")
@@ -535,6 +568,7 @@ def handle_question(data):
         
         # Now deal with the complete answer for the context window and the database record
         if answer is not None:
+            # log.log_message(repr(answer))
             session['chat'].append({"role": "assistant", "content": answer})
             session.modified = True
             
@@ -626,6 +660,33 @@ def rss():
     return render_template('rss.html', items=items, chat_ids=chat_ids, environ=os.environ, page_title=page_title)
 
 ############################################################################################################
+# Users
+
+class SignupForm(fwtf.FlaskForm):
+    email = wtf.StringField('Email', validators=[wtf.validators.DataRequired(), wtf.validators.Email()])
+    submit = wtf.SubmitField('Sign Up')
+
+@app.route('/dcx/signup', methods=['GET', 'POST'])
+def signup():
+    page_title = "Sign Up"
+    form = SignupForm()
+    
+    if request.method == 'POST':
+        email = bleach.clean(form.email.data)
+
+        if form.validate_on_submit():
+            signup_success = f'Well done, <strong>{email}</strong>..! Check your inbox (or spam folder) now for your confirmation code.'
+            flash(Markup(signup_success), 'success')
+            log.log_message(f"NEW EMAIL IS: {email}")
+        else:
+            for fields, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Error: {error}", 'error')
+        
+    return render_template('users_signup.html', form=form, environ=os.environ, page_title=page_title)
+
+
+#######################################################################################
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

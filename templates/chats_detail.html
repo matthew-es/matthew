@@ -8,17 +8,11 @@
     <p><strong>Prompt:</strong> {{ prompttext }}</p>
 </div>
 
-<div id="conversation">
+<div id="chat-record">
     <div id="chat-messages">
         {% for message, status in messages %}
-            <div class="message {{ status }}">
-                {% if status == 'question' %}
-                    <p class="user-question">
-                {% else %}
-                <p class="gpt-response">
-                {% endif %}
-                {{ message }}
-                </p>
+            <div class="{{ status }}">
+                {{ message|safe }}
             </div>
         {% endfor %}
     </div>

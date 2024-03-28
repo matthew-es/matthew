@@ -1,13 +1,41 @@
-html {
-    height: auto;
-}
+html {height: auto;}
+body {height: auto; font-family: Arial; background-color: #ffffff; color: #000000;}
 
-body {
-    height: auto;
-    font-family: Arial;
-    background-color: #ffffff;
-    color: #000000;
-}
+/* Basic html starting points */
+p {margin:0; margin-bottom: 15px}
+ul {margin-top: 20px;}
+ul li {margin-left: 0; margin-top: 5px;}
+img {max-width: 100%; margin-top: 20px;}
+
+/* Flash messages to user */
+.flash {padding: 10px; margin: 10px 0; border: 1px solid transparent; border-radius: 5px;}
+.flash.success {color: #155724; background-color: #d4edda; border-color: #c3e6cb;}
+.flash.error {color: #721c24; background-color: #f8d7da; border-color: #f5c6cb;}
+
+/* highlight.js code styles */
+
+pre {background-color: #000000; padding: 5px; overflow-x: auto;}
+pre code {background-color: #000000; padding: 5px; font-family: 'Courier New', Courier, monospace; border: none;}
+code {background-color: #e6e6e6; color: #017f6a; padding: 1px 5px;}
+
+pre .hljs {display: block; overflow-x: auto; padding: 0.5em; background: #000; color: #ffffff;}
+pre .hljs-attr {color: #ffffff;}
+pre .hljs-attribute {color: #007adf;}
+pre .hljs-bullet {color: #d36600;}
+pre .hljs-comment { color: #40c900; }
+pre .hljs-keyword { color: #c42c2c; }
+pre .hljs-name {color: #ffffff;}
+pre .hljs-number { color: #c42c2c; }
+pre .hljs-selector-class { color: #c42c2c; }
+pre .hljs-string { color: #d36600; }
+pre .hljs-subst {color: #ffffff;}
+pre .hljs-symbol {color: #ffffff;}
+
+pre .hljs-tag {color: #ffffff;}
+pre .hljs-tag .hljs-name {color: #ffffff;}
+pre .hljs-tag .hljs-attr {color: rgb(0, 183, 255);}
+
+/* Other stuff */
 
 #container_fixed {
     position: relative;
@@ -66,6 +94,17 @@ h1 {
     padding: 10px;
 }
 
+#chat-record {
+    border: 1px solid #ccc; 
+    height: auto;
+    box-sizing: border-box;
+    max-width: 100%;
+
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
 #chatForm { 
     position: absolute;
     height: auto;
@@ -78,17 +117,17 @@ h1 {
     background-color: #f0f0f0;
 }
 
-/* Style for user questions */
-.user-question {
+/* Chat questions and replies */
+.question {
     background-color: #f0f0f0f5; /* Light grey background */
     padding: 10px;
     margin-bottom: 5px;
     border-radius: 5px;
     text-align: left; /* Align user questions to the right */
 }
+.question p {margin-bottom: 0px;}
 
-/* Style for GPT replies */
-.gpt-response {
+.answer {
     background-color: #ffffff; /* Light green background */
     padding: 10px;
     margin-bottom: 5px;
@@ -267,7 +306,7 @@ h1 {
     padding: 10px;
 }
 
-.user-question, .gpt-response, #questionInput, #chatForm button {
+.question, .answer, #questionInput, #chatForm button {
     font-size: 1.1rem; /* Larger font size for readability */
 }
 
@@ -296,11 +335,6 @@ h1 {
     padding: 10px;
 }
 }
-
-p {margin:0; margin-bottom: 10px}
-ul {margin-top: 20px;}
-ul li {margin-left: 0; margin-top: 5px;}
-img {max-width: 100%; margin-top: 20px;}
 
 footer {
 position: fixed;
