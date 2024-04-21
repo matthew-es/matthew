@@ -1,39 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Matthew.es</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="{{ url_for('static', filename='/css/styles.css') }}">
-</head>
-<body>
-    <div id="container">
-        <div id="header">
-            <h1>Matthew.es</h1>
-        </div>
-        <div id="main">
-            <p>Experiments with AI. This is much easier than last time...</p>
+{% extends 'base_container_scroll.html' %}    
+
+{% block pagetitle %}DCX RSS{% endblock %}
+{% block h1title %}DCX RSS{% endblock %}
+
+{% block content_for_base_container %}
+            <p>Welcome to {{ site_name }}...</p>
             <ul>
-                <li>"Last time" was writing The Spain Report from scratch with Ruby on Rails</li>
-                <li>For publishing articles, emails, tweets Twitter API, Stripe API, etc.</li>
-                <li>Now the AI era is here...</li>
-                <li>So we go again...with ChatGPT4 and copilots as coding buddies</li>
-                <li>VS Code + Git + Github + Azure + LLMs flows pretty fast now</li>
-                <li>Python + html + css + javascript</li>
-                <li>Mostly just very basic things for now, a bit of Flask...</li>
-                <li>And then we learn go talk to the new LLM APIs...and build things faster</li>
-                <li>Check out <a href="https://chat.openai.com/g/g-tjqqsvqdl-news-analyst-gpt">News Analyst GPT</a> on the store</li>
-                <li>And then <a href="https://www.cryptoturtle.pro">CryptoTurtle.Pro</a>, which is looking at half a million Coinbase price points</li>
-                <li>Now working on cool client AI stuff.</li>
+                <li>Coming soon...</li>
             </ul>
             <ul>
-                <li>X: <a href="https://twitter.com/matthewbennett">@matthewbennett</a></li>
-                <li>Enquiries: m@matthew.es</li>
+                <li>X: <a href="https://twitter.com/{{ site_twitter_name }}">@{{ site_twitter_name }}</a></li>
+                <li>LinkedIn: <a href="https://www.linkedin.com/company/{{ site_linkedin_name }}/">{{ site_name }} LinkedIn</a></li>
+                <li>Facebook: <a href="https://www.facebook.com/{{ site_facebook_name }}/">{{ site_name }} Facebook</a></li>
+                <li>Enquiries: {{ site_email }}</li>
             </ul>
         </div>
         <div class="clear"></div>
     </div>
-    <footer>
-        <p>© 2024 Matthew Bennett</p>
-    </footer>
-</body>
-</html>
+    
+{% endblock %}

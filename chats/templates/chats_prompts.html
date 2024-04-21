@@ -1,0 +1,12 @@
+{% extends 'base_container_scroll.html' %}    
+
+{% block content_for_base_container %}
+    <ul>    
+    {% for chat_prompt_id in chat_prompt_ids %}
+            <li>
+                <strong>{{ chat_prompt_id[0] }}:</strong> <a href="{{ url_for('chats.chats_prompts_view', chat_prompt_id=chat_prompt_id[0]) }}">{{ chat_prompt_id[1] }}</a> 
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+{% include 'snippet_password.html' %}

@@ -1,0 +1,104 @@
+{% extends 'base_container_scroll.html' %}    
+
+{% block content_for_base_container %}
+
+<div id="confirmationDialog" class="modal">
+    <div class="modal-content">
+        <p id="confirmationDialogText"></p>
+        <button id="confirmDelete" class="admin-button-red">Yes, Delete</button>
+        <button id="cancelDelete" class="admin-button-orange">Cancel</button>
+    </div>
+</div>
+
+<form action="{{ url_for('articles.article_types') }}" method="post" id="adminlistform" class="admin-quick-flex">
+    <input type="text" class="admin-input-add" name="type_name" placeholder="Add new article type here...">
+    <button type="submit" style="margin-top: -6px;">Add</button>
+</form>
+
+{% for type in article_types %}
+<div class="admin-list-item">
+    <input type="text" value="{{ type.name }}" id="article-type-name-{{ type.id }}" class="admin-input-list" data-type-id="{{ type.id }}" data-type-name="{{ type.name }}" onchange="updateArticleType(this)">
+    <span class="admin-count">{{ type.count }}</span>
+    <button class="admin-delete" data-type-id="{{ type.id }}" data-type-name="{{ type.name | escape }}" onclick="deleteArticleType(this);">&#x1F5D1; </button>
+</div>
+{% endfor %}
+
+
+<script>
+    function updateArticleType(inputElement) {
+        var articleTypeId = inputElement.getAttribute('data-type-id');
+        var newName = inputElement.value;
+        fetch('{{ url_for("articles.update_article_type") }}', {
+            method: 'POST',
+            body: JSON.stringify({ 'article_type_id': articleTypeId, 'new_name': newName }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Handle response data, show success or error message
+            console.log(data);
+        })
+        .catch((error) => {
+            // Handle errors
+            console.error('Error:', error);
+        });
+    }
+
+    // This variable holds the URL for the delete request, which is rendered by Jinja2
+    var deleteArticleTypeUrl = "{{ url_for('articles.delete_article_type') }}";
+
+    // Function to show the confirmation dialog and handle the delete action
+    function deleteArticleType(buttonElement) {
+    var typeId = buttonElement.getAttribute('data-type-id');
+    var typeName = buttonElement.getAttribute('data-type-name');
+
+
+
+    var dialog = document.getElementById('confirmationDialog');
+    var dialogText = document.getElementById('confirmationDialogText');
+    dialogText.innerHTML = `Are you sure you want to delete <strong>'${typeName}'</strong>?`;
+    dialog.style.display = 'block';
+
+    document.getElementById('confirmDelete').onclick = function() {
+        fetch(deleteArticleTypeUrl, {
+            method: 'POST',
+            body: JSON.stringify({ 'article_type_id': typeId }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Article type deleted successfully");
+                window.location.reload(); // Or handle this more dynamically
+            } else {
+                console.error("Failed to delete article type");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
+        dialog.style.display = 'none';
+    };
+
+    document.getElementById('cancelDelete').onclick = function() {
+        dialog.style.display = 'none';
+    };
+}
+
+window.onclick = function(event) {
+    var dialog = document.getElementById('confirmationDialog');
+    if (event.target === dialog) {
+        dialog.style.display = "none";
+    }
+};
+
+</script>
+
+{% endblock %}
+
+{% include 'snippet_password.html' %}

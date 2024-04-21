@@ -1,0 +1,56 @@
+{% extends 'base_container_scroll.html' %}    
+{% block content_for_base_container %}
+
+<div id="newsfeed-main-container" class="newsfeed-list-view">    
+    
+    <!-- Switch between list or image cards -->
+    <div class="newsfeed-view-switcher">
+        <button id="switch-to-list">List</button>
+        <button id="switch-to-cards">Images</button>
+    </div>
+
+    <!-- List View -->
+    <div class="newsfeed-list-container">
+        {% for article in articles %}
+        <div class="newsfeed-list-item">
+            <span class="newsfeed-list-source">{{ article.type }}</span>
+            <div class="newsfeed-list-content">
+                <a href="{{ url_for('articles.articles_show', article_id=article.id, article_slug=article.slug) }}" class="newsfeed-list-title">{{ article.title }}</a>
+                <span class="newsfeed-list-lede">{{ article.lede }}</span>
+            </div>
+            <span class="newsfeed-list-date">{{ article.formatted_publishdate }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    
+
+    <!-- Image Card View -->
+    <div class="newsfeed-card-container">
+        {% for article in articles %}
+        <div class="newsfeed-card-item">
+            <div class="newsfeed-card-image" style="background-image: url('{{ article.image }}');">
+                <a href="{{ url_for('articles.articles_show', article_id=article.id) }}" class="newsfeed-card-link-overlay" rel="noopener noreferrer"></a>
+                    <div class="newsfeed-card-text">
+                        <h2 class="newsfeed-card-title">{{ article.title or "No Title" | truncate(100, true, '...') }}</h2>
+                        <p class="newsfeed-card-date"><strong>{{ article.formatted_publishdate }}</strong> from <strong>{{ article.type }}</strong></p>
+                        <p class="newsfeed-card-lede">{{ article.lede or "" | truncate(100, true, '...') }}</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('switch-to-list').addEventListener('click', function() {
+        document.getElementById('newsfeed-main-container').className = 'newsfeed-list-view';
+        });
+
+    document.getElementById('switch-to-cards').addEventListener('click', function() {
+        document.getElementById('newsfeed-main-container').className = 'newsfeed-card-view';
+        });
+</script>
+
+{% endblock %}

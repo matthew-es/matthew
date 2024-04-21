@@ -1,23 +1,208 @@
-html {height: auto;}
-body {height: auto; font-family: Arial; background-color: #ffffff; color: #000000;}
+/* Site colours */
+:root {
+    --color-one-dark: #007bff;
+    --color-one-normal: #3B5B81;
+    --color-one-light: #007bff;
+    --color-two-dark: #6f0003;
+    --color-two-normal: #AD0007;
+    --color-two-light: #ffe5e5;
+    --color-two-very-light: #fef4e7;
+    --color-three-dark: #007bff;
+    --color-three-normal: #007bff;
+    --color-three-light: #007bff;
+}
 
 /* Basic html starting points */
+/* See below for variations */
+
+html {height: auto;}
+body, textarea {font-family: Arial; font-size: 16px; background-color: #ffffff; color: #121212;}
+
+h1, h2, h3, h4, h5, h6, .admin-title {font-family: 'Roboto'; font-weight: 900; color: #243953;}
+h1, .admin-title {font-size: 30px;}
+h2 {font-size: 24px;}
+h3 {font-size: 22px;}
+h4 {font-size: 18px;}
+h5 {font-size: 16px;}
+h6 {font-size: 14px;}
+
+a, .item-title {color: var(--color-one-normal);}
+a:hover, .item-title:hover {color: var(--color-two-normal);}
+
 p {margin:0; margin-bottom: 15px}
 ul {margin-top: 20px;}
 ul li {margin-left: 0; margin-top: 5px;}
-img {max-width: 100%; margin-top: 20px;}
+img {max-width: 100%; margin-top: 10px; margin-bottom: 10px;}
+
+button {background-color: var(--color-two-normal); color: white; padding: 10px; margin: 0 auto; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;}
+button:hover {background-color: var(--color-two-dark);}
+button:disabled {background-color: #cccccc; color: #888888; cursor: not-allowed;}
+
+
+/* Site structural stuff */
+#container_fixed {position: relative; max-width: 1000px; border: 1px solid #121212; min-height: 98vh; height: 98vh; overflow: hidden; box-sizing: border-box; margin: 0 auto; padding: 30px; text-align: left;}
+#container_scroll {max-width: 1000px; position: relative; border: 1px solid #121212; min-height: 98vh; height: auto; overflow: hidden; box-sizing: border-box; margin: 0 auto; padding: 30px; text-align: left;}
+#header {width: 100%;}
+#nav{width: 100%; margin-bottom: 10px;}
+#main{width: 100%;}
+
+
+.admin-button-red {background-color: darkred; color: white;}
+.admin-button-red:hover {background-color: red; color: white;}
+
+.button-green {background-color: darkgreen; color: white; padding: 10px 15px; margin: 0 auto; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;}
+.button-green:hover {background-color: green; color: white; padding: 10px 15px; margin: 0 auto; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;}
+
+.admin-button {padding: 10px 15px; margin: 0 auto; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;}
+.admin-button:hover {padding: 10px 15px; margin: 0 auto; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;}
+.generate-button {margin: 10px 0;}
+
+
+/* Newsfeed lists, article lists, RSS lists */
+.newsfeed-main-container {display: flex; flex-wrap: wrap; justify-content: space-between;}
+.newsfeed-view-switcher {width: 100%; margin-bottom: 20px; text-align: right;}
+
+.newsfeed-list-container {padding: 0; margin: 0;}
+.newsfeed-list-view .newsfeed-list-container {display: block;}
+.newsfeed-list-view .newsfeed-card-container {display: none;}
+.newsfeed-list-item {display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #e1e1e1; gap: 10px;}
+.newsfeed-list-source {flex-grow: 0; flex-shrink: 0; width: 7ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;} 
+.newsfeed-list-content {
+    display: flex; justify-content: flex-start; gap: 10px; align-items:start; 
+    flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+.newsfeed-list-title {flex-grow: 0; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold;}
+.newsfeed-list-lede {flex-grow: 1; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.newsfeed-list-date {flex-grow: 0; flex-shrink: 0; width: 10ch; white-space: nowrap; text-align: right;}
+.newsfeed-list-analyse {flex-grow: 0; flex-shrink: 0; width: 7ch; white-space: nowrap; text-align: right; background-color: var(--color-two-very-light); color: var(--color-two-normal); font-weight: bold; padding: 2px 5px;}
+.newsfeed-list-analyse:hover {flex-grow: 0; flex-shrink: 0; width: 7ch; white-space: nowrap; text-align: right; background-color: var(--color-two-normal); color: var(--color-two-very-light); font-weight: bold; padding: 2px 5px;}
+.newsfeed-list-analyse-box-tag {font-weight: bold; color: var(--color-two-normal); text-transform: uppercase;}
+.newsfeed-list-analyse-box-headline {font-weight: bold; color: var(--color-one-normal)}
+.newsfeed-list-analyse-box-result {margin-top: 30px;}
+.newsfeed-list-analyse-box-more {display: block; text-align: right; margin-top: 30px;}
+.newsfeed-list-analyse-box-more-link {background-color: var(--color-two-very-light); color: var(--color-two-normal); font-weight: bold; padding: 5px;}
+.newsfeed-list-analyse-box-more-link:hover {color: var(--color-two-very-light); background-color: var(--color-two-normal); font-weight: bold; padding: 5px;}
+
+.newsfeed-card-container {display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; padding: 16px;}
+.newsfeed-card-view .newsfeed-card-container {display: grid;}
+.newsfeed-card-view .newsfeed-list-container {display: none;}
+.newsfeed-card-item {background: #ffffff;  overflow: hidden; position: relative; transition: all 0.3s ease;}
+.newsfeed-card-image {background-size: cover; background-position: center; height: 200px;}
+.newsfeed-card-text {position: absolute; bottom: 0; left: 0; width: 100%; padding: 8px; background: rgba(0, 0, 0, 0.5); color: #ffffff; transition: all 0.3s ease;}
+.newsfeed-card-title {font-size: 18px; color: #ffffff; margin: 0;}
+.newsfeed-card-lede {position: absolute; bottom: 0; left: 0; width: 100%; padding: 8px; background: rgba(0, 0, 0, 0.7); color: #ffffff; transition: transform 0.3s ease, opacity 0.3s ease; transform: translateY(100%); opacity: 0;}
+.newsfeed-card-date {font-size: 14px; color: #cccccc;}
+.newsfeed-card-link-overlay {position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1;}
+.newsfeed-card-item:hover .newsfeed-card-title, .newsfeed-card-item:hover .newsfeed-card-date {transform: translateY(-100%); opacity: 0; visibility: hidden;}
+.newsfeed-card-item:hover .newsfeed-card-lede {transform: translateY(0); display: block; opacity: 1; visibility: visible;}
+.newsfeed-card-link, .newsfeed-card-title-link, .newsfeed-card-lede-link {text-decoration: none; color: inherit;}
+.newsfeed-card-title-link:hover, .newsfeed-card-lede-link:hover {text-decoration: underline;}
+
+/* Articles */
+#lede {height: 50px;}
+.article_lede_display {font-style: italic;}
+.article_date_display {margin-top: 10px; font-size: 14px;}
+.article_image_display {margin-top: 10px;}
+.article_text_display {margin-top: 10px;}
+
+
+/* Admin, forms */
+#adminlistform {position: relative; height: auto; bottom: 0; left: 0; right: 0; max-width: 100%; margin: 10 auto; padding: 10px;}
+.admin-title, .admin-input {width: 100%; padding: 10px; margin-bottom: 10px;}
+.admin-textarea {width: 100%; padding: 20px; margin-bottom: 10px;}
+.admin-list-item, .admin-input-list {display: flex; flex-grow: 1; align-items: center; justify-content: space-between; margin-bottom: 5px; padding: 10px; font-size: 16px;}
+.admin-input-20 {width:20%; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+.admin-input-30 {width:30%; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+.admin-input-50 {width:50%; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+.admin-input-70 {width:70%; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+.admin-input-90 {width:90%; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+.admin-input-add {width:90%; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+.admin-button-right-align {width: 100%; margin-bottom: 10px; text-align: right;}
+.admin-quick-flex {display: flex; justify-content: space-between; align-items: center; gap: 10px;}
+.admin-count {margin: 0 1em;}
+.admin-select {
+    width: 100%; 
+    padding: 8px 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;
+
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="rgba(0,0,0,0.6)" d="M7.41 7.84L12 12.42 16.59 7.84 18 9.25l-6 6-6-6z"/></svg>');
+    background-repeat: no-repeat; background-position: right 10px top 50%; background-size: 12px;
+    background-color: white; 
+    
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    appearance: none; /* Remove default styling */
+    -webkit-appearance: none; /* For Safari */
+    -moz-appearance: none; /* For Firefox */
+}
+.admin-delete {margin: 0 1em; padding: 0 10px; background: none; border: none; cursor: pointer; font-size: 24px; background-color: #ffffff; color: #d9534f; text-align: right;}
+.admin-delete:hover {margin: 0 1em; padding: 0 10px; background: none; border: none; cursor: pointer; font-size: 24px; background-color: #d9534f; color: #ffffff; text-align: right;}
+.admin-delete-big {padding: 0; background: none; border: none; cursor: pointer; font-size: 36px; background-color: #ffffff; color: #d9534f; text-align: right;}
+.admin-delete-big:hover {padding: 0; background: none; border: none; cursor: pointer; font-size: 36px; background-color: #d9534f; color: #ffffff; text-align: right;}
+.admin-feed-item {display: flex; justify-content: space-between; align-items: center; padding: 0 0 0 5px; border-bottom: 1px solid #e1e1e1;}
+.admin-feed-content {white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+.admin-feed-title {margin-right: 10px; font-weight: bold;}
+.admin-free-url {}
+
+
+.modal {display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.8);}
+.close {color: #aaa; float: right; font-size: 28px; font-weight: bold;}
+.close:hover, .close:focus {color: black; text-decoration: none; cursor: pointer;}
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: #fefefe; margin: auto;
+    padding: 30px;
+    width: 90%; max-width: 600px; 
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    animation-name: animatetop;
+    animation-duration: 0.4s;
+}
+
+/* Chats */
+#chat-record {border: 1px solid #ccc; height: auto; box-sizing: border-box; max-width: 100%; margin-top: 20px; margin-bottom: 20px; padding: 10px;}
+.chat-form {
+    position: absolute; bottom: 0; left: 0; right: 0; height: auto; max-width: 1000px; margin: 0 auto;
+    display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+    border-radius: 0; padding: 10px; background-color: #3B5B81;
+}
+.chat-dropdown {box-sizing: border-box; flex-grow: 1}
+.chat-ask {box-sizing: border-box; display: flex; flex-direction: row; justify-content: space-between; width: 100%; align-items: center; gap: 5px;}
+.chat-askquestion {box-sizing: border-box; flex-grow: 1; flex-shrink: 1; flex-basis: 75%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+.chat-askbutton {box-sizing: border-box; flex-grow: 0; flex-shrink: 0; flex-basis: 20%;}
+
+#conversation {box-sizing: border-box; height: calc(70vh - 200px); overflow-y: auto; max-width: 100%; margin-top: 20px; margin-bottom: 20px; padding: 5px;}
+.chat-question {box-sizing: border-box; background-color: #cfdcf2; border-bottom: 1px solid #3B5B81; padding: 10px; margin-bottom: 2px; border-radius: 2px; text-align: left;}
+.chat-question p {margin-bottom: 0px;}
+.chat-answer {box-sizing: border-box; background-color: #ffffff; border-top: 1px solid #F18F12; padding: 10px; margin-bottom: 5px; border-radius: 2px; text-align: left;}
+
+.prompt-container {flex-basis: 100%; max-width: 50%; max-height: 250px; overflow-x: hidden; margin-right: 10px;}
+.generate-thinking {margin-bottom: 10px;}
+.image-container {flex-grow: 1; max-width: 50%;}
+  
+
+
+
+
+.margin-bottom-10 {margin-bottom: 10px;}
+.margin-bottom-20 {margin-bottom: 20px;}
+.margin-bottom-30 {margin-bottom: 30px;}
+.margin-bottom-40 {margin-bottom: 40px;}
+
+
+
 
 /* Flash messages to user */
 .flash {padding: 10px; margin: 10px 0; border: 1px solid transparent; border-radius: 5px;}
 .flash.success {color: #155724; background-color: #d4edda; border-color: #c3e6cb;}
 .flash.error {color: #721c24; background-color: #f8d7da; border-color: #f5c6cb;}
 
+
+
 /* highlight.js code styles */
-
-pre {background-color: #000000; padding: 5px; overflow-x: auto;}
-pre code {background-color: #000000; padding: 5px; font-family: 'Courier New', Courier, monospace; border: none;}
+pre {background-color: #121212; padding: 5px; overflow-x: auto;}
+pre code {background-color: #121212; padding: 5px; font-family: 'Courier New', Courier, monospace; border: none;}
 code {background-color: #e6e6e6; color: #017f6a; padding: 1px 5px;}
-
 pre .hljs {display: block; overflow-x: auto; padding: 0.5em; background: #000; color: #ffffff;}
 pre .hljs-attr {color: #ffffff;}
 pre .hljs-attribute {color: #007adf;}
@@ -30,326 +215,78 @@ pre .hljs-selector-class { color: #c42c2c; }
 pre .hljs-string { color: #d36600; }
 pre .hljs-subst {color: #ffffff;}
 pre .hljs-symbol {color: #ffffff;}
-
 pre .hljs-tag {color: #ffffff;}
 pre .hljs-tag .hljs-name {color: #ffffff;}
 pre .hljs-tag .hljs-attr {color: rgb(0, 183, 255);}
-
-/* Other stuff */
-
-#container_fixed {
-    position: relative;
-    max-width: 1000px;
-    border: 1px solid #000000;
-    min-height: 98vh;
-    height: 98vh;
-    overflow: hidden;
-    box-sizing: border-box;
-    margin: 0 auto;
-    padding: 30px;
-    text-align: left;
-    }
-
-#container_scroll {
-    max-width: 1000px;
-    position: relative;
-    border: 1px solid #000000;
-    min-height: 98vh;
-    height: auto;
-    overflow: hidden;
-    box-sizing: border-box;
-    margin: 0 auto;
-    padding: 30px;
-    text-align: left;
-    }
 
 .float-container {margin-bottom: 10px;}
 .float-left {float: left;}
 .float-right {float: right;}
 .float-clear {clear: both;}
+.margin-none {margin: 0;}
 
-
-#header {
-    width: 100%;
-}
-
-h1 {
-    font-family: 'Impact';
-    font-size: 30px;
-    letter-spacing: 2px;
-}
-
-#nav{width: 100%; margin-bottom: 10px;}
-#main{width: 100%;}
-
-#conversation {
-    border: 1px solid #ccc; 
-    height: calc(70vh - 200px);
-    box-sizing: border-box;
-    overflow-y: auto;
-    max-width: 100%;
-
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 10px;
-}
-
-#chat-record {
-    border: 1px solid #ccc; 
-    height: auto;
-    box-sizing: border-box;
-    max-width: 100%;
-
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 10px;
-}
-
-#chatForm { 
-    position: absolute;
-    height: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 10px;
-    background-color: #f0f0f0;
-}
-
-/* Chat questions and replies */
-.question {
-    background-color: #f0f0f0f5; /* Light grey background */
-    padding: 10px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    text-align: left; /* Align user questions to the right */
-}
-.question p {margin-bottom: 0px;}
-
-.answer {
-    background-color: #ffffff; /* Light green background */
-    padding: 10px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-    text-align: left;
-}
-
-/* Style for the input box */
-#questionInput {
-width:88%; /* Adjust the width as desired */
-padding: 10px; 
-margin-bottom: 5px;
-border: 1px solid #ccc; /* Light grey border */
-border-radius: 5px;   /* Slightly rounded corners */
-font-size: 16px;   /* Adjust font size if needed */
-}
-
-/* Style for the button */
-#chatForm button {
-background-color: #732634; /* Example: Green background */
-color: white;
-padding: 10px;
-margin: 0 auto;
-border: none;
-border-radius: 5px; 
-cursor: pointer;
-font-size: 16px;   
-}
-
-/* Optional: Hover effect for the button */
-#chatForm button:hover {
-background-color: #F23545; /* Darker green on hover */
-}
-
-#chatForm button:disabled {
-    background-color: #cccccc;
-    color: #888888;
-    cursor: not-allowed;
-}
-
-.spinner {
-display: inline-block;
-width: 16px; /* Adjust size as needed */
-height: 16px; 
-margin-right: 5px; 
-border: 2px solid #f3f3f3; /* Light grey */
-border-top-color: #3498db; /* Example color, change as desired */
-border-radius: 50%;
-animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
-}
-
-
-/* General form styling */
-form {
-    max-width: 100%; /* Set the form's maximum width */
-    margin: 20px auto; /* Center the form on the page */
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 8px;
-}
-
-/* Style for form labels */
-label {
-    display: block; /* Make each label occupy its own line */
-    margin-bottom: 5px; /* Space below each label */
-    font-weight: bold;
-}
-
-/* Style for input fields */
-input[type="text"] {
-    width: 95%;
-    padding: 10px;
-    margin-bottom: 20px; /* Space below each input field */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-textarea {
-    width: 95%;
-    height: 400px;
-    max-height: 800px;
-    padding: 10px;
-    margin-bottom: 20px; /* Space below each input field */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-/* Style for the textarea specifically */
-textarea {
-    resize: vertical; /* Allows the textarea to be vertically resizable */
-}
-
-/* Style for the form submission button */
-button[type="submit"] {
-    background-color: #007bff; /* Example: a blue background */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-button[type="submit"]:hover {
-    background-color: #0056b3; /* Darker shade of blue for hover state */
-}
-
-/* Basic styling for the dropdown */
+form {max-width: 100%; margin: 0px auto; margin-block-end: 0; border-radius: 8px;}
+label {display: block; margin-bottom: 5px; font-weight: bold;}
+textarea {width: 95%; height: 400px; max-height: 800px; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;}
 select {
-    width: 100%; /* Full width to match form container */
-    padding: 8px 12px; /* Padding for aesthetics */
-    margin-bottom: 3px; /* Margin to separate from next form element */
-    border: 1px solid #ccc; /* Light border */
-    border-radius: 4px; /* Rounded corners */
-    background-color: white; /* Background color */
-    font-size: 16px; /* Text size */
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Inner shadow for depth */
+    width: 100%; 
+    padding: 8px 12px; margin-bottom: 3px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;
+
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="rgba(0,0,0,0.6)" d="M7.41 7.84L12 12.42 16.59 7.84 18 9.25l-6 6-6-6z"/></svg>');
+    background-repeat: no-repeat; background-position: right 10px top 50%; background-size: 12px;
+    background-color: white; 
+    
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
     appearance: none; /* Remove default styling */
     -webkit-appearance: none; /* For Safari */
     -moz-appearance: none; /* For Firefox */
 }
+select:hover {border-color: #888;}
+select:focus {outline: none; border-color: #555; box-shadow: 0 0 3px #aaa;}
 
-/* Style for the dropdown arrow */
-select {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="rgba(0,0,0,0.6)" d="M7.41 7.84L12 12.42 16.59 7.84 18 9.25l-6 6-6-6z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 10px top 50%; /* Position the arrow */
-    background-size: 12px; /* Size of the arrow */
+footer {position: absolute; bottom: 0; margin: 0 auto; width: 100%; text-align: center; padding: 0; background-color: #000;color: #fff;}
+
+
+/* Waiting spinner thing... */
+.spinner {
+    display: inline-block; width: 16px; height: 16px; margin-right: 5px; 
+    border: 2px solid #f3f3f3; border-top-color: #3498db; border-radius: 50%;
+    animation: spin 1s linear infinite;
+    }
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-/* Style when hovering over the dropdown */
-select:hover {
-    border-color: #888; /* Darker border on hover */
-}
-
-/* Style when focusing on the dropdown (tabbing or clicking) */
-select:focus {
-    outline: none; /* Remove the default focus outline */
-    border-color: #555; /* Darker border for focus */
-    box-shadow: 0 0 3px #aaa; /* Add a glow effect */
-}
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
-html {
-    height: 100vh;
+    .prompt-container, .image-container {flex-basis: 100%; max-width: 100%;}
+
+    #conversation {height: calc(70vh - 200px); box-sizing: border-box; overflow-y: auto; max-width: 100%; margin-top: 20px; margin-bottom: 20px; padding: 10px;}
+    
+    .chat-ask {box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; width: 100%; align-items: center; gap: 5px;}
+    .chat-askquestion {box-sizing: border-box; flex-grow: 0; flex-shrink: 0; flex-basis: 100%; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;}
+    .chat-askbutton {box-sizing: border-box; flex-grow: 0; flex-shrink: 0; flex-basis: 100%; width: 100%;}
+
+    .newsfeed-list-item {display: block; margin-bottom: 5px;}
+    .newsfeed-list-content {display: block; width: 100%;}
+    .newsfeed-list-source {display: none;}
+    .newsfeed-list-title {display: block; width: 100%; margin-bottom: 5px; overflow:visible;}
+    .newsfeed-list-lede {display: block; width: 100%;}
+    .newsfeed-list-date {font-size: 12px; width: 100%; font-weight: bold;}
+    .newsfeed-list-analyse {flex-grow: 0; flex-shrink: 0; width: 7ch; white-space: nowrap; text-align: right; background-color: var(--color-two-very-light); color: var(--color-two-normal); font-size: 12px; padding-left: 5px;}
 }
 
-body {
-    height: 100vh;
 
-    font-family: Arial;
-    color: #000000;
-}
-
-
-h1 {
-    font-size: 2rem;
-    padding-bottom: 0;
-    margin-bottom: 0;
-}
-
-#conversation {
-    border: 1px solid #ccc; 
-    height: calc(70vh - 200px);
-    box-sizing: border-box;
-    overflow-y: auto;
-    max-width: 100%;
-
-    margin-top: 20px;
-    margin-bottom: 20px;
-    padding: 10px;
-}
-
-.question, .answer, #questionInput, #chatForm button {
-    font-size: 1.1rem; /* Larger font size for readability */
-}
-
-#chatForm { 
-    position: absolute;
-    height: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 5px;
-    background-color: #f0f0f0;
-    text-align: center;
-}
-
-#questionInput {
-    width: 95%; /* Adjust for smaller screens */
-    margin: 0 auto;
-    margin-bottom: 5px;
-}
-
-#chatForm button {
-    width: 98%;
-    margin: 0 auto;
-    padding: 10px;
-}
-}
-
-footer {
-position: fixed;
-bottom: 0;
-width: 100%;
-text-align: center;
-padding: 10px 0;
-background-color: #000;
-color: #fff;
-}
-
+/* Dark Mode */
 @media (prefers-color-scheme: dark) {
-    body {
-        background-color: #000000; /* Dark background */
-        color: #ffffff; /* Light text */
-    }
-    /* Define other dark mode styles here */
+    body, .chat-askquestion, .chat-dropdown, .chat-answer, textarea, input, form, .modal-content, select, .admin-select {background-color: #121212; color: #c9c9c9;}
+    .chat-question {color: #121212; background-color: #c9c9c9; border-bottom: 3px solid #77a4dd;}
+    .admin-delete, .admin-delete-big {background-color: #121212;}
+    a, .item-title {color: #77a4dd;}
+    h1, h2, h3, h4, h5, h6, .admin-title {color: var(--color-two-normal);}
+    .newsfeed-list-analyse, .newsfeed-list-analyse-box-more-link {background-color: var(--color-two-normal); color: var(--color-two-very-light); }
+    .newsfeed-list-analyse:hover, .newsfeed-list-analyse-box-more-link:hover {background-color: var(--color-two-very-light); color: var(--color-two-normal); }
 }

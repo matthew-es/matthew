@@ -2,8 +2,14 @@
     
     {% block content_for_base_base %}
         <div id="container_scroll">
-            {% include 'snippet_header.html' %}
-
-            {% block content_for_base_container %}{% endblock %}
+            {% include 'snippet_top_logo.html' %}
+            {% include 'snippet_top_nav.html' %}
+            <div class="main">
+                {% include 'snippet_title.html' %}
+                {% block content_for_base_container %}{% endblock %}
+            </div>
+        
+            <footer></footer>
         </div>
+
     {% endblock %}

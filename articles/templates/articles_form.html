@@ -1,0 +1,43 @@
+{% extends 'base_container_scroll.html' %}    
+
+{% block content_for_base_container %}
+    <form method="post" enctype="multipart/form-data">
+        <div class="admin-button-right-align">
+            <button type="submit">Save</button>
+        </div>
+        
+        <select id="article_type_id" name="article_type_id" class="admin-select">
+            {% for type_id, type_name in article_types %}
+                <option value="{{ type_id }}" {% if article and article.type == type_id %}selected{% endif %}>{{ type_name }}</option>
+            {% endfor %}
+        </select>
+        
+        <input type="text" id="title" name="title" value="{{ article.title if article else '' }}" class="admin-title" placeholder="Article Title Here..." required>
+
+        <input type="text" id="slug" name="slug" value="{{ article.slug if article else '' }}" class="admin-input" placeholder="Article-URL-slug-here-with-dashes" required>        
+
+        <textarea id="lede" name="lede" class="admin-textarea" style="min-height: 100px;" placeholder="Article lede here...">{{ article.lede if article else '' }}</textarea>
+
+        {% if article is defined and article.image %}
+            <img src="{{ article.image if article else '' }}" alt="Article Image" style="max-width: 300px;">
+            <br />
+        {% endif %}
+        <input type="file" id="image" name="image" class="admin-input">
+
+        <input type="text" id="publishdate" name="publishdate" value="{{ article.formatted_publishdate if article else '' }}" pattern="\d{2}/\d{2}/\d{4}" class="admin-input" placeholder="Article date in format DD/MM/YYYY">
+
+        <textarea id="text" name="text" style="min-height: 500px;" class="admin-textarea">{{ article.text if article else '' }}</textarea>
+
+    </form>
+
+
+    {% if article %}
+    <div class="admin-button-right-align">
+        <form action="{{ url_for('articles.delete_article', article_id=article.id) }}" method="post">
+            <button type="submit" class="admin-delete-big">&#x1F5D1;</button>
+        </form>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% include 'snippet_password.html' %}

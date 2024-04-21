@@ -1,0 +1,80 @@
+{% extends 'base_container_scroll.html' %}
+
+{% block content_for_base_container %}
+
+<div id="confirmationDialog" class="modal">
+    <div class="modal-content">
+        <p id="confirmationDialogText"></p>
+        <button id="confirmDelete" class="admin-button-red">Yes, Delete</button>
+        <button id="cancelDelete" class="admin-button-orange">Cancel</button>
+    </div>
+</div>
+
+<form action="{{ url_for('rss.rss_feeds') }}" method="post" id="rssform" class="admin-quick-flex">
+    <input type="url" class="admin-input-add" name="rss_feed_url" placeholder="Add new RSS Feed URL here...">
+    <button type="submit" style="margin-top: -6px;">Add</button>
+</form>
+
+{% for feed in rss_feeds %}
+<div class="admin-feed-item">
+    <div class="admin-feed-content">
+        <span class="admin-feed-title">{{ feed.title }}</span>
+        <span class="admin-feed-url"><a href="{{ feed.url }}">{{ feed.url }}</a></span>
+    </div>
+    <button class="admin-delete" data-feed-id="{{ feed.id }}" data-feed-title="{{ feed.title }}" onclick="deleteRSSFeed(this);">&#x1F5D1;</button>
+</div>
+{% endfor %}
+
+<script>
+var deleteFeedUrl = "{{ url_for('rss.feeds_delete') }}";
+
+function deleteRSSFeed(buttonElement) {
+    
+    var feedId = buttonElement.getAttribute('data-feed-id');
+    var feedTitle = buttonElement.getAttribute('data-feed-title');
+
+    var dialog = document.getElementById('confirmationDialog');
+    var dialogText = document.getElementById('confirmationDialogText');
+    dialogText.innerHTML = `Delete <strong>'${feedTitle}'</strong>?`;
+    dialog.style.display = 'block';
+
+    document.getElementById('confirmDelete').onclick = function() {
+        fetch(deleteFeedUrl, {
+            method: 'POST',
+            body: JSON.stringify({ 'feed_id': feedId }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log("RSS Feed deleted successfully");
+                window.location.reload();
+            } else {
+                console.error("Failed to delete RSS Feed");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
+        dialog.style.display = 'none';
+    };
+
+    document.getElementById('cancelDelete').onclick = function() {
+        dialog.style.display = 'none';
+    };
+}
+
+window.onclick = function(event) {
+    var dialog = document.getElementById('confirmationDialog');
+    if (event.target === dialog) {
+        dialog.style.display = "none";
+    }
+};
+</script>
+
+{% endblock %}
+
+{% include 'snippet_password.html' %}

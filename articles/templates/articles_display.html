@@ -1,0 +1,15 @@
+{% extends 'base_container_scroll.html' %}    
+
+{% block content_for_base_container %}
+    <div class="article_lede_display"><strong>{{article.type}}:</strong> {{ article.lede }}</div>
+    
+    <div class="article_date_display"><strong>Published on:</strong> {{ article.formatted_publishdate }}</div> 
+    
+    {% if article.image %}
+        <div class="article_image_display">
+            <img src="{{ article.image }}" alt="{{article.title}}">
+        </div>  
+    {% endif %}
+
+    <div class="article_text_display">{{ article.text | safe }}</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base_container_fixed.html' %}    
+
+{% block pagetitle %}DCX RSS Images{% endblock %}
+{% block h1title %}DCX RSS Images{% endblock %}
+
+{% block content_for_base_container %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <div class="container">
+        <div class="prompt-container">
+            <textarea id="prompt">{{ item.title + ' ' + item.description }}</textarea>
+        </div>
+    
+        <div id="imageContainer" class="image-container">
+            <div class="generate-button">
+                <button id="generateButton">Generate Image</button>
+            </div>
+            <div id="thinking" class="generate-thinking"></div>
+            <div class="feed-item">
+                <div class="feed-image-container" id="feed-image-container">
+                    <div class="feed-text">
+                        <h2 class="feed-title">{{ item.title|truncate(90, true, '...') }}</h2>
+                        <p class="feed-meta"><strong>{{ item.date }}</strong> from <strong>{{ item.feed }}</strong></p>
+                        <p class="feed-summary">{{ item.description|truncate(150, true, '...') }}</p>
+                    </div>
+                    <a href="{{ item.link }}" class="feed-link-overlay" target="_blank" rel="noopener noreferrer"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        var socket = io();
+        var thinkingContent = document.getElementById('thinking');
+        var imageResult = null;
+        var isStreaming = false;
+
+        function generateImage() {
+            if (isStreaming) return;
+
+            document.getElementById('generateButton').disabled = true;
+            isStreaming = true;
+
+            var prompt = document.getElementById('prompt').value;
+            
+            thinkingFiller = document.createElement("p");
+            thinkingFiller.innerHTML = "Thinking...<span class=\"spinner\"></span>";
+            thinkingFiller.classList.add("thinking");
+            thinkingContent.append(thinkingFiller);
+            
+            socket.emit('get_rss_image', {prompt: "Photo of: " + prompt});
+        }
+
+        socket.on('image_generated', function(data) {
+            // document.getElementById('resultImage').src = data.image_url;
+            thinkingContent.innerHTML = '';
+            var imageContainer = document.getElementById('feed-image-container');
+            imageContainer.style.backgroundImage = 'url("' + data.image_url + '")';
+            isStreaming = false;
+        });
+
+        document.getElementById('generateButton').addEventListener('click', generateImage);
+    </script>
+{% endblock %}
+
+{% include 'snippet_password.html' %}
