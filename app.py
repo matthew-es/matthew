@@ -64,11 +64,11 @@ with app.app_context():
     llmdb.check_or_create_tables()
 app.register_blueprint(llms.llms, url_prefix='/llms')
 
-import chats
-import chats.chats_database as chdb
-with app.app_context():
-    chdb.check_or_create_tables()
-app.register_blueprint(chats.chats, url_prefix='/chats')
+# import chats
+# import chats.chats_database as chdb
+# with app.app_context():
+#     chdb.check_or_create_tables()
+# app.register_blueprint(chats.chats, url_prefix='/chats')
 
 
 #######################################################################################
